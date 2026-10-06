@@ -1,0 +1,202 @@
+/* Skeleton Loading Styles - Modern Airbnb-like Loading */
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Dark theme skeleton */
+.skeleton-dark {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+/* Property Card Skeleton */
+.property-card-skeleton {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.property-card-skeleton .skeleton-image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+.property-card-skeleton .skeleton-content {
+    padding: 1rem;
+}
+
+.property-card-skeleton .skeleton-title {
+    height: 20px;
+    width: 70%;
+    margin-bottom: 0.5rem;
+}
+
+.property-card-skeleton .skeleton-text {
+    height: 16px;
+    width: 50%;
+    margin-bottom: 0.3rem;
+}
+
+.property-card-skeleton .skeleton-price {
+    height: 18px;
+    width: 40%;
+    margin-top: 0.5rem;
+}
+
+/* Property Details Skeleton */
+.property-details-skeleton {
+    padding: 2rem 1rem;
+}
+
+.property-hero-skeleton {
+    width: 100%;
+    height: 60vh;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+}
+
+.property-info-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.skeleton-section {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.skeleton-heading {
+    height: 24px;
+    width: 30%;
+    margin-bottom: 1rem;
+}
+
+.skeleton-paragraph {
+    height: 16px;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-paragraph:last-child {
+    width: 60%;
+}
+
+/* Gallery Skeleton */
+.gallery-skeleton {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    height: 500px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+}
+
+.gallery-hero-skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 12px 0 0 12px;
+}
+
+.gallery-thumbs-skeleton {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.gallery-thumb-skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+/* Hide skeleton when content loads */
+.content-loaded .skeleton,
+.content-loaded .property-card-skeleton,
+.content-loaded .property-details-skeleton {
+    display: none;
+}
+
+/* Fade in content */
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* Featured Section Skeleton */
+.featured-skeleton {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    overflow: hidden;
+}
+
+.featured-card-skeleton {
+    min-width: 280px;
+    height: 200px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 12px;
+    position: relative;
+}
+
+.featured-card-skeleton::after {
+    content: '';
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    height: 60px;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+/* Mobile o
+ptimizations */
+@media (max-width: 768px) {
+    .gallery-skeleton {
+        grid-template-columns: 1fr;
+        height: 600px;
+    }
+    
+    .gallery-hero-skeleton {
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .gallery-thumbs-skeleton {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+    
+    .featured-card-skeleton {
+        min-width: 250px;
+        height: 180px;
+    }
+}

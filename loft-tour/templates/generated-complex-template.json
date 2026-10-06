@@ -1,0 +1,96 @@
+{
+    "$schema": "https://loft-tour.schema.json",
+    "version": "1.0",
+    "tourName": "Luxury Villa Complete Tour",
+    "description": "Comprehensive tour showcasing all LOFT\u00b3 features",
+    "metadata": {
+        "created": "2026-01-17",
+        "author": "LOFT\u00b3 System",
+        "propertyType": "luxury_residential",
+        "totalNodes": 3,
+        "estimatedDuration": "2-3 minutes"
+    },
+    "settings": {
+        "autoAdvance": false,
+        "showProgress": true,
+        "enableGyroscope": true,
+        "defaultTransitionDuration": 1200
+    },
+    "nodes": [
+        {
+            "id": "entrance",
+            "label": "Main Entrance",
+            "description": "Welcome to this beautiful property entrance",
+            "image": "entrance.jpg",
+            "nextNode": "foyer",
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 0,
+            "layers": [
+                {
+                    "name": "welcome_sign",
+                    "description": "Welcome sign with property information",
+                    "image": "welcome_sign.png",
+                    "position": {
+                        "x": 0.5,
+                        "y": 0.299999999999999988897769753748434595763683319091796875
+                    },
+                    "parallaxFactor": 0.5,
+                    "scale": 1,
+                    "rotation": 0,
+                    "opacity": 1,
+                    "visible": true,
+                    "depthOrder": 1
+                },
+                {
+                    "name": "ambient_lighting",
+                    "description": "Ambient lighting effects",
+                    "image": "ambient_lighting.png",
+                    "position": {
+                        "x": 0.6999999999999999555910790149937383830547332763671875,
+                        "y": 0.299999999999999988897769753748434595763683319091796875
+                    },
+                    "parallaxFactor": 0.200000000000000011102230246251565404236316680908203125,
+                    "scale": 0.8000000000000000444089209850062616169452667236328125,
+                    "rotation": 0,
+                    "opacity": 0.59999999999999997779553950749686919152736663818359375,
+                    "visible": true,
+                    "depthOrder": 0
+                }
+            ]
+        },
+        {
+            "id": "foyer",
+            "label": "Grand Foyer",
+            "description": "Spacious foyer with elegant design",
+            "image": "foyer.jpg",
+            "nextNode": "living_room",
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 1,
+            "layers": []
+        },
+        {
+            "id": "living_room",
+            "label": "Living Room",
+            "description": "Comfortable living area with modern furnishings",
+            "image": "living_room.jpg",
+            "nextNode": null,
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 2
+        }
+    ]
+}

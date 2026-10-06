@@ -1,0 +1,335 @@
+/**
+ * Cookie Consent Banner Styles
+ * Clean, modern, trustworthy design
+ */
+
+#cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+#cookie-consent-banner.show {
+    transform: translateY(0);
+}
+
+#cookie-consent-banner.hide {
+    transform: translateY(100%);
+}
+
+.cookie-banner-overlay {
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.08);
+}
+
+.cookie-banner-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+}
+
+.cookie-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.cookie-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.cookie-banner-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cookie-banner-body {
+    margin-bottom: 1.5rem;
+}
+
+.cookie-banner-body p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #6b7280;
+    margin: 0 0 1rem 0;
+}
+
+.cookie-categories {
+    display: none;
+    margin: 1rem 0;
+    padding: 1.25rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.cookie-category {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cookie-category:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.category-info {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.category-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.category-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* Modern Toggle Switch */
+.cookie-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.cookie-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d5db;
+    transition: 0.3s ease;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    transition: 0.3s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+    background-color: #3b82f6;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.slider.essential {
+    background-color: #10b981;
+    cursor: not-allowed;
+}
+
+.slider.essential:before {
+    transform: translateX(20px);
+}
+
+/* Action Buttons */
+.cookie-banner-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-cookie {
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.btn-accept {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+
+.btn-accept:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+.btn-reject {
+    background: #ffffff;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
+.btn-reject:hover {
+    background: #f9fafb;
+    color: #374151;
+}
+
+.btn-customize {
+    background: #ffffff;
+    color: #3b82f6;
+    border-color: #d1d5db;
+}
+
+.btn-customize:hover {
+    background: #f0f9ff;
+    color: #2563eb;
+}
+
+.btn-save {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
+.btn-save:hover {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+}
+
+/* Footer Links */
+.cookie-banner-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.cookie-banner-footer a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.2s ease;
+}
+
+.cookie-banner-footer a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.cookie-banner-footer span {
+    color: #9ca3af;
+    margin: 0 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cookie-banner-content {
+        padding: 1.25rem 1rem;
+    }
+    
+    .cookie-banner-actions {
+        justify-content: stretch;
+        margin-top: 1rem;
+    }
+    
+    .btn-cookie {
+        flex: 1;
+        min-width: auto;
+    }
+    
+    .cookie-category {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    
+    .category-info {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .cookie-banner-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .cookie-banner-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-cookie {
+        width: 100%;
+    }
+}
+
+/* Cookie Settings Button */
+.cookie-settings-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #ffffff;
+    color: #3b82f6;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    z-index: 9999;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.cookie-settings-btn:hover {
+    background: #f0f9ff;
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}

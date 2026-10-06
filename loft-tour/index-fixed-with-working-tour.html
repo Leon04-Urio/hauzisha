@@ -1,0 +1,1207 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT Automated Tour Generator</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <link rel="stylesheet" href="css/loft-tour-sharing.css">
+    <link rel="stylesheet" href="css/loft-tour-export.css">
+    <style>
+        /* Essential styles for upload functionality */
+        .drop-zone.processing {
+            border-color: #007bff;
+            background: #e3f2fd;
+            opacity: 0.8;
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background: #ffeaea;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #d4af37;
+            background: #fff9e6;
+        }
+        
+        /* Enhanced tool button styles */
+        .tool-btn {
+            width: 40px !important;
+            height: 40px !important;
+            border: none !important;
+            background: #f8f9fa !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            color: #666 !important;
+            font-size: 16px !important;
+        }
+        
+        .tool-btn:hover {
+            background: #e9ecef !important;
+            color: #333 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .tool-btn.active {
+            background: #d4af37 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .editor-tools {
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+            padding: 10px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Visual editor canvas styles */
+        .layer-editor-canvas {
+            border-radius: 8px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+            cursor: crosshair !important;
+        }
+        
+        .visual-layer-editor {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        .editor-canvas-container {
+            flex: 1 !important;
+            position: relative !important;
+            background: #f8f9fa !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+        
+        .editor-overlay {
+            position: absolute !important;
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            pointer-events: none !important;
+        }
+        
+        .editor-overlay > * {
+            pointer-events: auto !important;
+        }
+        
+        /* Layer properties panel styles */
+        .layer-properties-panel {
+            background: white !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            overflow: hidden !important;
+        }
+        
+        .panel-header {
+            padding: 15px 20px !important;
+            background: #f8f9fa !important;
+            border-bottom: 1px solid #e9ecef !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        .btn-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border: none !important;
+            background: transparent !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #666 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .btn-icon:hover {
+            background: #e9ecef !important;
+            color: #333 !important;
+        }
+        
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .preview-thumbnail {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .preview-info {
+            flex: 1;
+        }
+        
+        .preview-name {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .preview-size {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .node-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .node-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .node-item.selected {
+            background: #fff9e6;
+            border-color: #d4af37;
+        }
+        
+        .node-preview {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .node-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .node-thumbnail {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .node-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .node-info {
+            flex: 1;
+        }
+        
+        .node-label {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .node-id {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #d4af37;
+            transform: scale(1.2);
+        }
+        
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        #meta-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" class="app">
+        
+        <!-- Upload Section -->
+        <section id="upload-section" class="section active">
+            <div class="upload-container">
+                <div class="upload-header">
+                    <div class="logo">
+                        <i class="fas fa-cube"></i>
+                        <h1>LOFT<sup>3</sup> Tour Generator</h1>
+                    </div>
+                    <p class="tagline">Automated Matterport-Style Walkthrough Creator</p>
+                </div>
+
+                <div class="upload-grid">
+                    <!-- Panoramas Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <h3>Upload Panoramas</h3>
+                        <p>360° equirectangular images</p>
+                        <div class="drop-zone" id="pano-drop-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Drag & drop or click</span>
+                            <input type="file" id="pano-input" accept="image/*" multiple hidden>
+                        </div>
+                        <div id="pano-preview" class="preview-list"></div>
+                    </div>
+
+                    <!-- Metadata Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <h3>Tour Metadata</h3>
+                        <p>JSON or CSV with node info</p>
+                        <div class="drop-zone" id="meta-drop-zone">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Upload JSON/CSV</span>
+                            <input type="file" id="meta-input" accept=".json,.csv" hidden>
+                        </div>
+                        <div id="meta-preview" class="meta-info"></div>
+                        <button class="btn-link" onclick="showMetaTemplate()">
+                            <i class="fas fa-info-circle"></i> View Template
+                        </button>
+                    </div>
+
+                    <!-- Layers Upload (Optional) -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>Parallax Layers</h3>
+                        <p>Optional PNG overlays</p>
+                        <div class="drop-zone" id="layer-drop-zone">
+                            <i class="fas fa-images"></i>
+                            <span>Add layers (optional)</span>
+                            <input type="file" id="layer-input" accept="image/png" multiple hidden>
+                        </div>
+                        <div id="layer-preview" class="preview-list"></div>
+                    </div>
+                </div>
+
+                <div class="upload-actions">
+                    <button class="btn btn-primary btn-large" id="generate-btn" disabled>
+                        <i class="fas fa-magic"></i>
+                        Generate 3D Tour
+                    </button>
+                    <button class="btn btn-secondary" onclick="debugData()" style="margin-left: 10px;">
+                        <i class="fas fa-bug"></i>
+                        Debug Data
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Editor Section -->
+        <section id="editor-section" class="section">
+            <div class="editor-layout">
+                <!-- Sidebar -->
+                <aside class="editor-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Tour Nodes</h3>
+                        <button class="btn-icon" onclick="addNode()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="nodes-list" class="nodes-list"></div>
+                </aside>
+
+                <!-- Main Editor -->
+                <main class="editor-main">
+                    <div class="editor-toolbar">
+                        <div class="toolbar-left">
+                            <button class="btn-icon" onclick="backToUpload()">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <span class="node-title" id="current-node-title">Select a node</span>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-secondary" onclick="previewTour()">
+                                <i class="fas fa-play"></i> Preview 3D Tour
+                            </button>
+                            <button class="btn btn-primary" onclick="saveTour()">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="editor-content">
+                        <div class="panorama-preview" id="pano-editor-preview">
+                            <!-- Visual Layer Editor will be inserted here -->
+                            <div class="preview-overlay">
+                                <p>Select a node to edit</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panels">
+                            <!-- Node Settings -->
+                            <div class="panel">
+                                <h4>Node Settings</h4>
+                                <div class="form-group">
+                                    <label>Label</label>
+                                    <input type="text" id="node-label" class="form-control" placeholder="e.g., Living Room">
+                                </div>
+                                <div class="form-group">
+                                    <label>Next Node</label>
+                                    <select id="node-next" class="form-control">
+                                        <option value="">End of tour</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Rotation Limits</label>
+                                    <div class="range-group">
+                                        <input type="range" id="rotation-h" min="10" max="180" value="30">
+                                        <span id="rotation-h-val">±30°</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </section>
+
+        <!-- Viewer Section - WORKING 3D TOUR ENGINE -->
+        <section id="viewer-section" class="section">
+            <div id="viewer-container" style="width: 100vw; height: 100vh; position: relative; background: #000;">
+                <!-- The LOFT³ Tour Engine will render here -->
+            </div>
+            
+            <div class="test-controls" style="position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 8px; z-index: 1000; max-width: 400px;">
+                <h2 style="margin-bottom: 15px; font-size: 18px; color: #00ff88;">🎮 Interactive 3D Tour</h2>
+                
+                <div>
+                    <button class="btn-icon" onclick="exitViewer()" style="background: #ff4444; color: white; margin-right: 10px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button id="prev-node-btn" disabled style="background: #00ff88; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 4px; cursor: pointer; font-weight: 600;">← Previous</button>
+                    <button id="next-node-btn" disabled style="background: #00ff88; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 4px; cursor: pointer; font-weight: 600;">Next →</button>
+                </div>
+                
+                <div>
+                    <button id="jump-first-btn" disabled style="background: #00ff88; color: #000; border: none; padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Jump to First</button>
+                    <button id="jump-middle-btn" disabled style="background: #00ff88; color: #000; border: none; padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Jump to Middle</button>
+                    <button id="jump-last-btn" disabled style="background: #00ff88; color: #000; border: none; padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Jump to Last</button>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; font-size: 12px; font-family: monospace;">
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">Tour Loaded:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="tour-loaded">No</span>
+                    </div>
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">Current Node:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="current-node">-</span>
+                    </div>
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">Node Index:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="node-index">-</span>
+                    </div>
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">Total Nodes:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="total-nodes">-</span>
+                    </div>
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">FPS:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="fps">-</span>
+                    </div>
+                    <div style="margin: 5px 0;">
+                        <span style="color: #888;">Transitioning:</span>
+                        <span style="color: #00ff88; font-weight: bold;" id="transitioning">No</span>
+                    </div>
+                </div>
+                
+                <div id="message-area"></div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="meta-template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Metadata Template</h3>
+                <button class="btn-icon" onclick="closeModal('meta-template-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Create a JSON file with this structure:</p>
+                <pre><code>{
+  "nodes": [
+    {
+      "id": "gate",
+      "image": "gate.jpg",
+      "label": "Main Gate",
+      "next": "entrance",
+      "layers": [
+        {
+          "image": "car.png",
+          "x": 0.3,
+          "y": 0.5,
+          "scale": 1.0,
+          "parallaxFactor": 0.5
+        }
+      ]
+    },
+    {
+      "id": "entrance",
+      "image": "entrance.jpg",
+      "label": "Entrance Hall",
+      "next": "living"
+    }
+  ]
+}</code></pre>
+                <button class="btn btn-primary" onclick="downloadTemplate()">
+                    <i class="fas fa-download"></i> Download Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">Processing...</p>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Three.js for parallax layers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Marzipano for panorama rendering (Local) -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Tour Engine Components (in correct dependency order) -->
+    <script src="js/loft-tour-device-capabilities.js"></script>
+    <script src="js/loft-tour-performance-profiler.js"></script>
+    <script src="js/loft-tour-memory-optimizer.js"></script>
+    <script src="js/loft-tour-progressive-loader.js"></script>
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    
+    <!-- Additional LOFT³ Components -->
+    <script src="js/loft-tour-metadata-parser.js"></script>
+    <script src="js/loft-tour-mobile-optimization.js"></script>
+    <script src="js/loft-tour-layer-library.js"></script>
+    <script src="js/loft-tour-visual-editor.js"></script>
+    <script src="js/loft-tour-matterport-ui.js"></script>
+    <script src="js/loft-tour-viewer.js"></script>
+    <script src="js/loft-tour-sharing.js"></script>
+    <script src="js/loft-tour-offline-packager.js"></script>
+    <script src="js/loft-tour-export-ui.js"></script>
+    <script src="js/loft-tour-editor.js"></script>
+
+    <script>
+        // Global variables for the working tour engine
+        let engine = null;
+        let tourLoaded = false;
+        
+        // Simple connection to the existing editor system
+        let loftTourEditor = null;
+        
+        // UI elements for tour navigation
+        const loadTourBtn = document.getElementById('generate-btn');
+        const prevNodeBtn = document.getElementById('prev-node-btn');
+        const nextNodeBtn = document.getElementById('next-node-btn');
+        const jumpFirstBtn = document.getElementById('jump-first-btn');
+        const jumpMiddleBtn = document.getElementById('jump-middle-btn');
+        const jumpLastBtn = document.getElementById('jump-last-btn');
+        const messageArea = document.getElementById('message-area');
+        
+        // Status elements
+        const tourLoadedEl = document.getElementById('tour-loaded');
+        const currentNodeEl = document.getElementById('current-node');
+        const nodeIndexEl = document.getElementById('node-index');
+        const totalNodesEl = document.getElementById('total-nodes');
+        const fpsEl = document.getElementById('fps');
+        const transitioningEl = document.getElementById('transitioning');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent multiple initializations
+            if (window.loftEditorInitialized) {
+                console.log('Editor already initialized, skipping...');
+                return;
+            }
+            window.loftEditorInitialized = true;
+            
+            // Initialize the editor system properly
+            initializeEditor();
+            
+            // Wait for the editor to initialize
+            setTimeout(() => {
+                if (window.loftTourEditor) {
+                    loftTourEditor = window.loftTourEditor;
+                    console.log('Connected to LOFT Tour Editor');
+                    
+                    // Override the generate button to use the working tour engine
+                    const generateBtn = document.getElementById('generate-btn');
+                    if (generateBtn) {
+                        generateBtn.addEventListener('click', () => {
+                            if (loftTourEditor) {
+                                // Generate tour data and then launch the working 3D viewer
+                                loftTourEditor.generateTour();
+                                // Wait a moment for generation, then preview
+                                setTimeout(() => {
+                                    previewTour();
+                                }, 1000);
+                            }
+                        });
+                    }
+                    
+                    // Monitor editor state to update generate button
+                    setInterval(() => {
+                        updateGenerateButton();
+                    }, 1000);
+                } else {
+                    // Fallback initialization if loftTourEditor is not available
+                    console.log('Using fallback editor initialization');
+                    initializeFallbackEditor();
+                }
+            }, 1000);
+            
+            // Setup navigation event listeners
+            setupNavigationListeners();
+        });
+        
+        function setupNavigationListeners() {
+            // Navigation event listeners
+            if (prevNodeBtn) prevNodeBtn.addEventListener('click', previousNode);
+            if (nextNodeBtn) nextNodeBtn.addEventListener('click', nextNode);
+            if (jumpFirstBtn) jumpFirstBtn.addEventListener('click', () => jumpToNode(0));
+            if (jumpMiddleBtn) jumpMiddleBtn.addEventListener('click', () => {
+                if (engine && engine.tourData && engine.tourData.nodes) {
+                    jumpToNode(Math.floor(engine.tourData.nodes.length / 2));
+                }
+            });
+            if (jumpLastBtn) jumpLastBtn.addEventListener('click', () => {
+                if (engine && engine.tourData && engine.tourData.nodes) {
+                    jumpToNode(engine.tourData.nodes.length - 1);
+                }
+            });
+            
+            // Update status periodically
+            setInterval(updateStatus, 100);
+        }
+        
+        // Initialize engine with proper async handling
+        async function initEngine() {
+            try {
+                const container = document.getElementById('viewer-container');
+                if (!container) {
+                    throw new Error('Viewer container not found');
+                }
+                
+                engine = new LoftTourEngine(container);
+                
+                // Wait for engine initialization to complete
+                // The engine calls init() in constructor but doesn't await it
+                // So we need to wait for the key components to be ready
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max
+                
+                while (attempts < maxAttempts) {
+                    if (engine.marzipanoViewer && engine.layerManager && engine.transitionManager) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Engine initialization timeout - components not ready');
+                }
+                
+                // Setup node change callback
+                engine.onNodeChange = (node, index) => {
+                    updateStatus();
+                    showMessage(`Switched to: ${node.label || node.id}`, 'success');
+                };
+                
+                showMessage('3D Tour Engine initialized successfully', 'success');
+                return true;
+            } catch (error) {
+                showMessage(`Failed to initialize 3D engine: ${error.message}`, 'error');
+                console.error(error);
+                return false;
+            }
+        }
+        
+        // Load tour with the working 3D engine
+        async function loadTourWith3DEngine(tourData) {
+            if (!engine) {
+                const initSuccess = await initEngine();
+                if (!initSuccess) return false;
+            }
+            
+            try {
+                await engine.loadTour(tourData);
+                
+                tourLoaded = true;
+                updateStatus();
+                enableNavigationButtons();
+                
+                showMessage('3D Tour loaded successfully! Use mouse to look around, buttons to navigate.', 'success');
+                return true;
+                
+            } catch (error) {
+                showMessage(`Failed to load 3D tour: ${error.message}`, 'error');
+                console.error(error);
+                return false;
+            }
+        }
+        
+        // Navigation functions for the working 3D tour
+        async function previousNode() {
+            if (!engine || !tourLoaded) return;
+            
+            try {
+                await engine.previousNode();
+                updateStatus();
+            } catch (error) {
+                showMessage(`Navigation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function nextNode() {
+            if (!engine || !tourLoaded) return;
+            
+            try {
+                await engine.nextNode();
+                updateStatus();
+            } catch (error) {
+                showMessage(`Navigation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function jumpToNode(index) {
+            if (!engine || !tourLoaded || !engine.tourData || !engine.tourData.nodes) return;
+            
+            try {
+                const node = engine.tourData.nodes[index];
+                if (node) {
+                    await engine.transitionTo(node, index);
+                    updateStatus();
+                }
+            } catch (error) {
+                showMessage(`Jump error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update status display
+        function updateStatus() {
+            if (!engine) return;
+            
+            if (tourLoadedEl) tourLoadedEl.textContent = tourLoaded ? 'Yes' : 'No';
+            
+            if (tourLoaded && engine.currentNode) {
+                if (currentNodeEl) currentNodeEl.textContent = engine.currentNode.label || engine.currentNode.id;
+                if (nodeIndexEl) nodeIndexEl.textContent = `${engine.currentNodeIndex + 1}`;
+                if (totalNodesEl) totalNodesEl.textContent = engine.tourData ? engine.tourData.nodes.length : 0;
+                if (transitioningEl) transitioningEl.textContent = engine.isTransitioning ? 'Yes' : 'No';
+                
+                // Update button states
+                if (prevNodeBtn) {
+                    prevNodeBtn.disabled = engine.currentNodeIndex === 0 || engine.isTransitioning;
+                    prevNodeBtn.style.opacity = prevNodeBtn.disabled ? '0.5' : '1';
+                }
+                if (nextNodeBtn) {
+                    const maxIndex = engine.tourData ? engine.tourData.nodes.length - 1 : 0;
+                    nextNodeBtn.disabled = engine.currentNodeIndex === maxIndex || engine.isTransitioning;
+                    nextNodeBtn.style.opacity = nextNodeBtn.disabled ? '0.5' : '1';
+                }
+            }
+            
+            if (fpsEl) fpsEl.textContent = engine.fps || '-';
+        }
+        
+        // Enable navigation buttons
+        function enableNavigationButtons() {
+            if (prevNodeBtn) prevNodeBtn.disabled = false;
+            if (nextNodeBtn) nextNodeBtn.disabled = false;
+            if (jumpFirstBtn) jumpFirstBtn.disabled = false;
+            if (jumpMiddleBtn) jumpMiddleBtn.disabled = false;
+            if (jumpLastBtn) jumpLastBtn.disabled = false;
+        }
+        
+        // Show message
+        function showMessage(text, type = 'info') {
+            if (!messageArea) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.style.cssText = `
+                margin-top: 10px;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                ${type === 'success' ? 'background: rgba(0, 255, 136, 0.1); color: #00ff88;' : ''}
+                ${type === 'error' ? 'background: rgba(255, 68, 68, 0.1); color: #ff4444;' : ''}
+            `;
+            messageDiv.textContent = text;
+            
+            messageArea.innerHTML = '';
+            messageArea.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
+        }
+        
+        function initializeEditor() {
+            // Ensure all required scripts are loaded
+            if (typeof window.LoftTourEditor !== 'undefined') {
+                // Prevent multiple initializations
+                if (window.loftTourEditor) {
+                    console.log('LoftTourEditor already exists, skipping initialization');
+                    return;
+                }
+                
+                // Initialize the main editor
+                window.loftTourEditor = new LoftTourEditor();
+                console.log('LoftTourEditor initialized');
+            }
+        }
+        
+        function initializeFallbackEditor() {
+            // Create a minimal editor interface if the main one fails
+            console.log('Initializing fallback editor interface');
+            
+            // Initialize visual editor if container exists
+            const editorContainer = document.getElementById('pano-editor-preview');
+            if (editorContainer && typeof VisualLayerEditor !== 'undefined') {
+                window.visualEditor = new VisualLayerEditor(editorContainer, null);
+                console.log('Visual editor initialized as fallback');
+            }
+        }
+        
+        function updateGenerateButton() {
+            const btn = document.getElementById('generate-btn');
+            if (!btn || !loftTourEditor) return;
+            
+            const hasImages = loftTourEditor.uploadedPanoramas && loftTourEditor.uploadedPanoramas.length > 0;
+            const hasMetadata = loftTourEditor.tourMetadata !== null;
+            
+            btn.disabled = !(hasImages && hasMetadata);
+            
+            if (hasImages && hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Generate 3D Tour';
+            } else if (hasImages && !hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-file-upload"></i> Upload Metadata First';
+            } else if (!hasImages && hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-images"></i> Upload Images First';
+            } else {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Generate 3D Tour';
+            }
+        }
+        
+        function debugData() {
+            console.log('=== DEBUG DATA ===');
+            
+            const editor = window.loftEditor || window.loftTourEditor || loftTourEditor;
+            
+            if (editor) {
+                console.log('Editor found:', true);
+                console.log('Editor type:', editor.constructor.name);
+                console.log('Uploaded panoramas:', editor.uploadedPanoramas ? editor.uploadedPanoramas.length : 'N/A');
+                console.log('Tour metadata:', editor.tourMetadata ? 'Available' : 'None');
+                console.log('Current tour:', editor.currentTour ? 'Available' : 'None');
+                console.log('Current tour nodes:', editor.currentTour ? editor.currentTour.nodes.length : 'N/A');
+                
+                // Show detailed node information
+                if (editor.currentTour && editor.currentTour.nodes) {
+                    console.log('=== NODE DETAILS ===');
+                    editor.currentTour.nodes.forEach((node, index) => {
+                        console.log(`Node ${index}:`, {
+                            id: node.id,
+                            label: node.label,
+                            imageUrl: node.imageUrl ? 'Available' : 'Missing',
+                            imageUrlLength: node.imageUrl ? node.imageUrl.length : 0,
+                            imageUrlPreview: node.imageUrl ? node.imageUrl.substring(0, 50) + '...' : 'N/A'
+                        });
+                    });
+                }
+                
+                // Check 3D engine availability
+                console.log('LoftTourEngine available:', typeof LoftTourEngine !== 'undefined');
+                console.log('3D engine instance:', engine ? 'Available' : 'None');
+                
+            } else {
+                console.log('Editor not found');
+                console.log('window.loftEditor:', typeof window.loftEditor);
+                console.log('window.loftTourEditor:', typeof window.loftTourEditor);
+                console.log('loftTourEditor:', typeof loftTourEditor);
+            }
+            console.log('==================');
+        }
+        
+        // Use the working 3D tour engine for preview
+        function previewTour() {
+            console.log('Preview tour called - launching 3D engine');
+            debugData();
+            
+            // Ensure only viewer section is active
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('viewer-section').classList.add('active');
+            
+            // Check for the correct global editor reference
+            const editor = window.loftEditor || window.loftTourEditor;
+            
+            if (editor && editor.currentTour) {
+                console.log('Found editor with tour data, launching 3D viewer');
+                
+                // Use the working 3D tour engine
+                loadTourWith3DEngine(editor.currentTour);
+                
+            } else {
+                // Try to create tour data from current state
+                const tourData = createTourDataFromCurrentState();
+                if (tourData) {
+                    console.log('Created tour data from current state, launching 3D viewer');
+                    
+                    // Use the working 3D tour engine
+                    loadTourWith3DEngine(tourData);
+                } else {
+                    console.error('No tour data available');
+                    alert('No tour data available for preview. Please generate a tour first.');
+                    return;
+                }
+            }
+        }
+        
+        function createTourDataFromCurrentState() {
+            // Try to create tour data from current visual editor state
+            if (window.visualEditor && window.visualEditor.layers && window.visualEditor.layers.length > 0) {
+                return {
+                    tourName: 'Visual Editor Tour',
+                    nodes: [{
+                        id: 'node_1',
+                        label: 'Edited Node',
+                        image: 'uploads/loft-tours/panoramas/test-panorama.jpg', // Use test image
+                        initialYaw: 0,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: window.visualEditor.layers
+                    }]
+                };
+            }
+            
+            // Check if there's any uploaded data we can use
+            if (window.loftTourEditor && window.loftTourEditor.uploadedPanoramas) {
+                return {
+                    tourName: 'Generated Tour',
+                    nodes: window.loftTourEditor.uploadedPanoramas.map((file, index) => ({
+                        id: `node_${index + 1}`,
+                        label: file.name || `Node ${index + 1}`,
+                        image: file.url || URL.createObjectURL(file),
+                        initialYaw: index * 1.57, // Different starting angles
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    }))
+                };
+            }
+            
+            // Fallback: create a demo tour with test panorama
+            return {
+                tourName: "Demo 3D Tour",
+                nodes: [
+                    {
+                        id: "demo1",
+                        label: "Demo Panorama 1",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 0,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    },
+                    {
+                        id: "demo2",
+                        label: "Demo Panorama 2",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 1.57,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    },
+                    {
+                        id: "demo3",
+                        label: "Demo Panorama 3",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 3.14,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    }
+                ]
+            };
+        }
+        
+        function saveTour() {
+            const editor = window.loftEditor || window.loftTourEditor || loftTourEditor;
+            
+            if (!editor || !editor.currentTour) {
+                // Try to get tour data from visual editor or create basic tour data
+                const tourData = createTourDataFromCurrentState();
+                if (!tourData) {
+                    alert('No tour data to save. Please generate a tour first.');
+                    return;
+                }
+                
+                saveTourData(tourData);
+                return;
+            }
+            
+            saveTourData(editor.currentTour);
+        }
+        
+        function saveTourData(tourData) {
+            try {
+                // Create downloadable tour data
+                const saveData = {
+                    name: tourData.tourName || tourData.name || 'Generated Tour',
+                    created: new Date().toISOString(),
+                    nodes: tourData.nodes.map(node => ({
+                        id: node.id,
+                        label: node.label,
+                        image: node.image || node.imageUrl,
+                        nextNode: node.nextNode,
+                        initialYaw: node.initialYaw || 0,
+                        initialPitch: node.initialPitch || 0,
+                        initialFov: node.initialFov || 120,
+                        rotationLimits: node.rotationLimits || { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: node.layers || []
+                    }))
+                };
+                
+                // Create and download JSON file
+                const blob = new Blob([JSON.stringify(saveData, null, 2)], { 
+                    type: 'application/json' 
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${saveData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tour.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                // Show success message
+                showSaveSuccessNotification();
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save tour: ' + error.message);
+            }
+        }
+        
+        function showSaveSuccessNotification() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+                border-radius: 6px;
+                padding: 12px 16px;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-family: 'Inter', sans-serif;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                Tour saved successfully!
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function backToUpload() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('upload-section').classList.add('active');
+        }
+        
+        function exitViewer() {
+            // Stop the 3D engine when exiting
+            if (engine) {
+                tourLoaded = false;
+                // Reset status
+                updateStatus();
+            }
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('editor-section').classList.add('active');
+        }
+        
+        function showMetaTemplate() {
+            document.getElementById('meta-template-modal').style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function downloadTemplate() {
+            const template = {
+                "nodes": [
+                    {
+                        "id": "entrance",
+                        "image": "entrance.jpg",
+                        "label": "Main Entrance",
+                        "next": "living_room"
+                    },
+                    {
+                        "id": "living_room",
+                        "image": "living.jpg", 
+                        "label": "Living Room",
+                        "next": "kitchen"
+                    },
+                    {
+                        "id": "kitchen",
+                        "image": "kitchen.jpg",
+                        "label": "Kitchen", 
+                        "next": null
+                    }
+                ]
+            };
+            
+            const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tour-metadata-template.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeModal('meta-template-modal');
+        }
+        
+        // Placeholder functions for compatibility
+        function addNode() { 
+            alert('Add node functionality coming soon'); 
+        }
+        
+        function toggleFullscreen() { 
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        }
+        
+        function shareTour() { 
+            alert('Share functionality coming soon'); 
+        }
+        
+        function toggleUI() { 
+            alert('UI toggle functionality coming soon'); 
+        }
+    </script>
+</body>
+</html>

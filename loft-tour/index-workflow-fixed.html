@@ -1,0 +1,650 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT Automated Tour Generator</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <link rel="stylesheet" href="css/loft-tour-sharing.css">
+    <link rel="stylesheet" href="css/loft-tour-export.css">
+    <style>
+        /* Essential styles for upload functionality */
+        .drop-zone.processing {
+            border-color: #007bff;
+            background: #e3f2fd;
+            opacity: 0.8;
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background: #ffeaea;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #d4af37;
+            background: #fff9e6;
+        }
+        
+        /* Enhanced tool button styles */
+        .tool-btn {
+            width: 40px !important;
+            height: 40px !important;
+            border: none !important;
+            background: #f8f9fa !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            color: #666 !important;
+            font-size: 16px !important;
+        }
+        
+        .tool-btn:hover {
+            background: #e9ecef !important;
+            color: #333 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .tool-btn.active {
+            background: #d4af37 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .editor-tools {
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+            padding: 10px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Visual editor canvas styles */
+        .layer-editor-canvas {
+            border-radius: 8px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+            cursor: crosshair !important;
+        }
+        
+        .visual-layer-editor {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        .editor-canvas-container {
+            flex: 1 !important;
+            position: relative !important;
+            background: #f8f9fa !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+        
+        .editor-overlay {
+            position: absolute !important;
+            top: 10px !important;
+            left: 10px !important;
+            z-index: 1000 !important;
+        }
+        
+        /* Hide sections initially */
+        .editor-section {
+            display: none;
+        }
+        
+        .editor-section.active {
+            display: block;
+        }
+        
+        /* Preview button in editor */
+        .editor-preview-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #d4af37;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .editor-preview-btn:hover {
+            background: #b8941f;
+            transform: translateY(-1px);
+        }
+        
+        .back-to-upload-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-upload-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="../images/logo.png" alt="Hauzisha" class="logo-img">
+                <h1>LOFT Automated Tour Generator</h1>
+            </div>
+        </div>
+
+        <!-- Upload Section (Initial View) -->
+        <div id="upload-section" class="upload-section active">
+            <div class="upload-container">
+                <div class="upload-header">
+                    <h2>Create Your 3D Virtual Tour</h2>
+                    <p>Upload panoramic images and metadata to generate an immersive 3D tour experience</p>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="upload-group">
+                    <h3><i class="fas fa-images"></i> Upload Panoramic Images</h3>
+                    <div class="drop-zone" id="image-drop-zone">
+                        <div class="drop-zone-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop panoramic images here or <span class="browse-link">browse files</span></p>
+                            <small>Supports: JPG, PNG, WebP (360° panoramic images recommended)</small>
+                        </div>
+                        <input type="file" id="image-input" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div class="upload-preview" id="image-preview"></div>
+                </div>
+
+                <!-- Metadata Upload -->
+                <div class="upload-group">
+                    <h3><i class="fas fa-code"></i> Upload Tour Metadata</h3>
+                    <div class="drop-zone" id="metadata-drop-zone">
+                        <div class="drop-zone-content">
+                            <i class="fas fa-file-code"></i>
+                            <p>Drag & drop JSON metadata file or <span class="browse-link">browse files</span></p>
+                            <small>JSON file containing tour structure and navigation data</small>
+                        </div>
+                        <input type="file" id="metadata-input" accept=".json" style="display: none;">
+                    </div>
+                    <div class="upload-preview" id="metadata-preview"></div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="upload-actions">
+                    <button class="btn btn-primary btn-large" id="generate-btn" disabled>
+                        <i class="fas fa-edit"></i>
+                        Open Editor
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Section -->
+        <div id="editor-section" class="editor-section">
+            <button class="back-to-upload-btn" onclick="showUploadSection()">
+                <i class="fas fa-arrow-left"></i> Back to Upload
+            </button>
+            <button class="editor-preview-btn" onclick="previewTour()">
+                <i class="fas fa-play"></i> Preview Tour
+            </button>
+            
+            <div class="editor-container">
+                <h2>Tour Editor</h2>
+                <p>Edit your tour settings and add interactive elements</p>
+                
+                <!-- Editor content will be loaded here -->
+                <div id="editor-content">
+                    <div class="editor-placeholder">
+                        <i class="fas fa-edit" style="font-size: 48px; margin-bottom: 20px; color: #d4af37;"></i>
+                        <p>Tour editor will load here</p>
+                        <p style="font-size: 14px; opacity: 0.7;">Upload images and metadata first</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tour Viewer Section -->
+        <div id="viewer-section" class="viewer-section" style="display: none;">
+            <button class="back-to-upload-btn" onclick="showEditorSection()">
+                <i class="fas fa-arrow-left"></i> Back to Editor
+            </button>
+            
+            <!-- Tour Viewer Container -->
+            <div id="viewer-container" class="viewer-container">
+                <div class="viewer-placeholder">
+                    <i class="fas fa-play-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <p>Interactive 3D tour will appear here</p>
+                    <p style="font-size: 14px; opacity: 0.7;">Upload images and generate tour to preview</p>
+                </div>
+            </div>
+
+            <!-- Tour Navigation Controls -->
+            <div class="tour-controls" id="tour-controls" style="display: none;">
+                <button id="prev-node-btn" class="control-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="node-info">Node 1 of 1</span>
+                <button id="next-node-btn" class="control-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/marzipano.min.js"></script>
+    
+    <!-- LOFT Tour Engine Scripts -->
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-progressive-loader.js"></script>
+    <script src="js/loft-tour-device-capabilities.js"></script>
+    <script src="js/loft-tour-performance-profiler.js"></script>
+    <script src="js/loft-tour-memory-optimizer.js"></script>
+    <script src="js/loft-tour-editor.js"></script>
+
+    <script>
+        // Global variables
+        let uploadedImages = [];
+        let tourMetadata = null;
+        let engine = null;
+        let loftTourEditor = null;
+        let currentSection = 'upload';
+
+        // UI elements
+        const imageDropZone = document.getElementById('image-drop-zone');
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const metadataDropZone = document.getElementById('metadata-drop-zone');
+        const metadataInput = document.getElementById('metadata-input');
+        const metadataPreview = document.getElementById('metadata-preview');
+        const generateBtn = document.getElementById('generate-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        // Navigation elements
+        const prevNodeBtn = document.getElementById('prev-node-btn');
+        const nextNodeBtn = document.getElementById('next-node-btn');
+        const nodeInfo = document.getElementById('node-info');
+        const tourControls = document.getElementById('tour-controls');
+
+        // Section management
+        function showUploadSection() {
+            document.getElementById('upload-section').style.display = 'block';
+            document.getElementById('editor-section').style.display = 'none';
+            document.getElementById('viewer-section').style.display = 'none';
+            currentSection = 'upload';
+        }
+
+        function showEditorSection() {
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('editor-section').style.display = 'block';
+            document.getElementById('viewer-section').style.display = 'none';
+            currentSection = 'editor';
+            
+            // Initialize editor if not already done
+            if (!loftTourEditor && uploadedImages.length > 0 && tourMetadata) {
+                initializeEditor();
+            }
+        }
+
+        function showViewerSection() {
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('editor-section').style.display = 'none';
+            document.getElementById('viewer-section').style.display = 'block';
+            currentSection = 'viewer';
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setupUploadHandlers();
+            setupNavigationListeners();
+            
+            // Load test data automatically for demo
+            loadTestData();
+        });
+
+        function setupUploadHandlers() {
+            // Image upload handlers
+            imageDropZone.addEventListener('click', () => imageInput.click());
+            imageDropZone.addEventListener('dragover', handleDragOver);
+            imageDropZone.addEventListener('drop', handleImageDrop);
+            imageInput.addEventListener('change', handleImageSelect);
+
+            // Metadata upload handlers
+            metadataDropZone.addEventListener('click', () => metadataInput.click());
+            metadataDropZone.addEventListener('dragover', handleDragOver);
+            metadataDropZone.addEventListener('drop', handleMetadataDrop);
+            metadataInput.addEventListener('change', handleMetadataSelect);
+
+            // Generate button handler
+            generateBtn.addEventListener('click', () => {
+                if (uploadedImages.length > 0 && tourMetadata) {
+                    showEditorSection();
+                }
+            });
+        }
+
+        function setupNavigationListeners() {
+            if (prevNodeBtn) prevNodeBtn.addEventListener('click', previousNode);
+            if (nextNodeBtn) nextNodeBtn.addEventListener('click', nextNode);
+        }
+
+        // Load test data for demo
+        async function loadTestData() {
+            try {
+                // Load test metadata
+                const response = await fetch('test-metadata.json');
+                if (response.ok) {
+                    tourMetadata = await response.json();
+                    updateMetadataPreview();
+                    console.log('Test metadata loaded:', tourMetadata);
+                }
+
+                // Simulate uploaded images
+                uploadedImages = [
+                    {
+                        name: 'test-panorama.jpg',
+                        path: 'uploads/loft-tours/panoramas/test-panorama.jpg',
+                        type: 'image/jpeg'
+                    }
+                ];
+                updateImagePreview();
+                updateGenerateButton();
+            } catch (error) {
+                console.error('Error loading test data:', error);
+            }
+        }
+
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleImageDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            processImageFiles(files);
+        }
+
+        function handleMetadataDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/json' || file.name.endsWith('.json'));
+            if (files.length > 0) {
+                processMetadataFile(files[0]);
+            }
+        }
+
+        function handleImageSelect(e) {
+            const files = Array.from(e.target.files);
+            processImageFiles(files);
+        }
+
+        function handleMetadataSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processMetadataFile(file);
+            }
+        }
+
+        // File processing
+        function processImageFiles(files) {
+            uploadedImages = files.map(file => ({
+                name: file.name,
+                file: file,
+                type: file.type,
+                url: URL.createObjectURL(file)
+            }));
+            updateImagePreview();
+            updateGenerateButton();
+        }
+
+        function processMetadataFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    tourMetadata = JSON.parse(e.target.result);
+                    updateMetadataPreview();
+                    updateGenerateButton();
+                } catch (error) {
+                    console.error('Error parsing metadata:', error);
+                    alert('Invalid JSON file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // UI updates
+        function updateImagePreview() {
+            imagePreview.innerHTML = '';
+            uploadedImages.forEach(image => {
+                const preview = document.createElement('div');
+                preview.className = 'file-preview';
+                preview.innerHTML = `
+                    <i class="fas fa-image"></i>
+                    <span>${image.name}</span>
+                `;
+                imagePreview.appendChild(preview);
+            });
+        }
+
+        function updateMetadataPreview() {
+            if (tourMetadata) {
+                metadataPreview.innerHTML = `
+                    <div class="file-preview">
+                        <i class="fas fa-file-code"></i>
+                        <span>Tour metadata loaded (${tourMetadata.nodes ? tourMetadata.nodes.length : 0} nodes)</span>
+                    </div>
+                `;
+            }
+        }
+
+        function updateGenerateButton() {
+            const hasImages = uploadedImages.length > 0;
+            const hasMetadata = tourMetadata !== null;
+            
+            generateBtn.disabled = !(hasImages && hasMetadata);
+            
+            if (hasImages && hasMetadata) {
+                generateBtn.innerHTML = '<i class="fas fa-edit"></i> Open Editor';
+                generateBtn.style.background = '#d4af37';
+            } else {
+                generateBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Files First';
+                generateBtn.style.background = '#ccc';
+            }
+        }
+
+        // Editor initialization
+        function initializeEditor() {
+            const editorContent = document.getElementById('editor-content');
+            editorContent.innerHTML = `
+                <div class="editor-workspace">
+                    <h3>Tour Configuration</h3>
+                    <div class="editor-info">
+                        <p><strong>Images:</strong> ${uploadedImages.length} panoramic images loaded</p>
+                        <p><strong>Nodes:</strong> ${tourMetadata.nodes ? tourMetadata.nodes.length : 0} tour nodes configured</p>
+                        <p><strong>Tour Name:</strong> ${tourMetadata.name || 'Untitled Tour'}</p>
+                    </div>
+                    
+                    <div class="editor-actions">
+                        <button class="btn btn-secondary" onclick="editTourSettings()">
+                            <i class="fas fa-cog"></i> Edit Settings
+                        </button>
+                        <button class="btn btn-secondary" onclick="addInteractiveElements()">
+                            <i class="fas fa-plus"></i> Add Elements
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Editor functions (placeholders)
+        function editTourSettings() {
+            alert('Tour settings editor would open here');
+        }
+
+        function addInteractiveElements() {
+            alert('Interactive elements editor would open here');
+        }
+
+        // Tour preview function
+        async function previewTour() {
+            if (!uploadedImages.length || !tourMetadata) {
+                alert('Please upload images and metadata first');
+                return;
+            }
+
+            showViewerSection();
+            showLoading('Loading 3D tour...');
+
+            try {
+                await initEngine();
+                await loadTourWith3DEngine();
+                hideLoading();
+                tourControls.style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading tour:', error);
+                hideLoading();
+                alert('Error loading tour: ' + error.message);
+            }
+        }
+
+        // Engine initialization
+        async function initEngine() {
+            try {
+                const container = document.getElementById('viewer-container');
+                if (!container) {
+                    throw new Error('Viewer container not found');
+                }
+
+                engine = new LoftTourEngine(container);
+                
+                // Wait for engine initialization
+                let attempts = 0;
+                const maxAttempts = 50;
+                
+                while (attempts < maxAttempts) {
+                    if (engine.marzipanoViewer && engine.layerManager && engine.transitionManager) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+
+                if (attempts >= maxAttempts) {
+                    throw new Error('Engine initialization timeout');
+                }
+
+                console.log('✅ 3D Tour Engine ready');
+                return engine;
+            } catch (error) {
+                console.error('Engine initialization failed:', error);
+                throw error;
+            }
+        }
+
+        // Load tour with 3D engine
+        async function loadTourWith3DEngine() {
+            try {
+                if (!engine) {
+                    throw new Error('Engine not initialized');
+                }
+
+                console.log('Loading tour with metadata:', tourMetadata);
+                await engine.loadTour(tourMetadata);
+                
+                console.log('SUCCESS: 3D Tour loaded! Use mouse to look around, arrows to navigate.');
+                updateNodeInfo();
+                
+            } catch (error) {
+                console.error('Failed to load tour:', error);
+                throw error;
+            }
+        }
+
+        // Navigation functions
+        function previousNode() {
+            if (engine && engine.currentNodeIndex > 0) {
+                engine.switchToNode(engine.currentNodeIndex - 1);
+                updateNodeInfo();
+            }
+        }
+
+        function nextNode() {
+            if (engine && engine.tourData && engine.currentNodeIndex < engine.tourData.nodes.length - 1) {
+                engine.switchToNode(engine.currentNodeIndex + 1);
+                updateNodeInfo();
+            }
+        }
+
+        function updateNodeInfo() {
+            if (engine && engine.tourData) {
+                const current = engine.currentNodeIndex + 1;
+                const total = engine.tourData.nodes.length;
+                nodeInfo.textContent = `Node ${current} of ${total}`;
+            }
+        }
+
+        // Loading overlay functions
+        function showLoading(text = 'Loading...') {
+            loadingText.textContent = text;
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        // Remove drag over class when leaving
+        document.addEventListener('dragleave', function(e) {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                document.querySelectorAll('.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

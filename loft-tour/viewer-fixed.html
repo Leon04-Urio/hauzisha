@@ -1,0 +1,712 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT³ Virtual Tour</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Experience this amazing property with our immersive 360° virtual tour. Explore every room and detail from the comfort of your home.">
+    <meta name="keywords" content="virtual tour, 360 tour, property tour, real estate, immersive experience">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Virtual Tour - LOFT³">
+    <meta property="og:description" content="Experience this amazing property with our immersive 360° virtual tour.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    <meta property="og:site_name" content="LOFT³ Virtual Tours">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Virtual Tour - LOFT³">
+    <meta name="twitter:description" content="Experience this amazing property with our immersive 360° virtual tour.">
+    <meta name="twitter:image" content="">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <link rel="stylesheet" href="css/loft-tour-sharing.css">
+    <link rel="stylesheet" href="css/loft-tour-export.css">
+    
+    <style>
+        /* Viewer-specific styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .viewer-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .viewer-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 1000;
+        }
+        
+        .viewer-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .viewer-loading h2 {
+            margin: 0 0 12px 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .viewer-loading p {
+            margin: 0;
+            color: #d1d5db;
+            font-size: 16px;
+        }
+        
+        .viewer-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 60px 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .viewer-error i {
+            font-size: 64px;
+            color: #ef4444;
+            margin-bottom: 24px;
+        }
+        
+        .viewer-error h2 {
+            margin: 0 0 16px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .viewer-error p {
+            margin: 0 0 24px 0;
+            color: #d1d5db;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .viewer-error .error-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .viewer-error .btn {
+            background: #d4af37;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .viewer-error .btn:hover {
+            background: #b8941f;
+            transform: translateY(-1px);
+        }
+        
+        .viewer-error .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .viewer-error .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        /* Share button in viewer */
+        .viewer-share-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .viewer-share-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.05);
+        }
+        
+        /* Tour info overlay */
+        .tour-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            max-width: 300px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tour-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .tour-info p {
+            margin: 0;
+            color: #d1d5db;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .viewer-share-btn {
+                top: 10px;
+                right: 10px;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            
+            .tour-info {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                padding: 12px 16px;
+            }
+            
+            .tour-info h3 {
+                font-size: 16px;
+            }
+            
+            .tour-info p {
+                font-size: 13px;
+            }
+            
+            .viewer-error {
+                margin: 20px;
+                padding: 40px 30px;
+            }
+            
+            .viewer-error h2 {
+                font-size: 24px;
+            }
+            
+            .viewer-error .error-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container" id="viewer-container">
+        <!-- Loading State -->
+        <div class="viewer-loading" id="viewer-loading">
+            <div class="spinner"></div>
+            <h2>Loading Virtual Tour</h2>
+            <p>Preparing your immersive experience...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div class="viewer-error" id="viewer-error" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h2>Tour Unavailable</h2>
+            <p id="error-message">This virtual tour could not be loaded. It may have been removed or is temporarily unavailable.</p>
+            <div class="error-actions">
+                <button class="btn" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                <a href="/" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Go Home
+                </a>
+            </div>
+        </div>
+        
+        <!-- Tour Viewer -->
+        <div class="tour-viewer" id="tour-viewer" style="display: none;">
+            <div class="viewer-canvas" id="viewer-canvas-container">
+                <canvas id="viewer-canvas"></canvas>
+            </div>
+            
+            <!-- Share Button -->
+            <button class="viewer-share-btn" id="viewer-share-btn">
+                <i class="fas fa-share-alt"></i>
+                Share
+            </button>
+            
+            <!-- Tour Info -->
+            <div class="tour-info" id="tour-info">
+                <h3 id="tour-title">Loading...</h3>
+                <p id="tour-description">Preparing tour information...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Three.js for parallax layers - using working CDN with fallbacks -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js" 
+            onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'"></script>
+    <script>
+        // Ensure Three.js loads before proceeding
+        window.threeJSReady = new Promise((resolve) => {
+            function checkThreeJS() {
+                if (typeof THREE !== 'undefined') {
+                    console.log('✅ Three.js loaded and ready');
+                    resolve();
+                } else {
+                    console.log('⏳ Waiting for Three.js...');
+                    setTimeout(checkThreeJS, 100);
+                }
+            }
+            checkThreeJS();
+        });
+    </script>
+    
+    <!-- Marzipano for panorama rendering -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Tour Engine Components - SIMPLIFIED VERSION WITHOUT PROBLEMATIC PERFORMANCE MONITORING -->
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    <script src="js/loft-tour-sharing.js"></script>
+
+    <script>
+        class LoftTourSimpleViewer {
+            constructor() {
+                this.tourId = null;
+                this.engine = null;
+                this.sharing = null;
+                this.tourData = null;
+                this.options = {
+                    autoplay: false,
+                    hideUI: false,
+                    fullscreen: false,
+                    startNode: null
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                // Parse URL parameters
+                this.parseUrlParams();
+                
+                // Setup sharing
+                this.setupSharing();
+                
+                // Load tour
+                this.loadTour();
+            }
+            
+            parseUrlParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                this.tourId = urlParams.get('tour');
+                this.options.autoplay = urlParams.get('autoplay') === '1';
+                this.options.hideUI = urlParams.get('ui') === '0';
+                this.options.fullscreen = urlParams.get('fullscreen') === '1';
+                this.options.startNode = urlParams.get('start') || null;
+                
+                console.log('Viewer options:', this.options);
+            }
+            
+            setupSharing() {
+                const shareBtn = document.getElementById('viewer-share-btn');
+                shareBtn.addEventListener('click', () => {
+                    if (this.sharing) {
+                        this.sharing.showShareModal();
+                    }
+                });
+            }
+            
+            async loadTour() {
+                if (!this.tourId) {
+                    // Load demo tour with test panorama when no tour ID is provided
+                    console.log('No tour ID provided, loading demo tour...');
+                    await this.loadDemoTour();
+                    return;
+                }
+                
+                try {
+                    // Fetch tour data
+                    const response = await fetch(`/api/index.php/get-loft-tour?id=${this.tourId}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load tour');
+                    }
+                    
+                    this.tourData = data.tour;
+                    
+                    // Update page metadata
+                    this.updatePageMetadata(this.tourData);
+                    
+                    // Wait for Three.js to load before initializing engine
+                    await this.waitForThreeJS();
+                    
+                    // Initialize tour engine with SIMPLE configuration
+                    const container = document.getElementById('viewer-canvas-container');
+                    this.engine = new LoftTourEngine(container, {
+                        viewerMode: true,
+                        hideUI: this.options.hideUI,
+                        // DISABLE PROBLEMATIC PERFORMANCE MONITORING
+                        enablePerformanceMonitoring: false,
+                        enableNetworkOptimization: false,
+                        enableMemoryOptimization: false,
+                        enableDeviceCapabilities: false
+                    });
+                    
+                    // Wait for engine to be fully initialized
+                    await this.waitForEngineReady();
+                    
+                    // Initialize sharing
+                    if (typeof LoftTourSharing !== 'undefined') {
+                        this.sharing = new LoftTourSharing(this.engine);
+                        this.sharing.setTourId(this.tourId);
+                    }
+                    
+                    // Load tour data
+                    await this.engine.loadTour(this.tourData);
+                    
+                    // Start from specific node if requested
+                    if (this.options.startNode) {
+                        const startNodeData = this.tourData.nodes.find(n => n.node_id === this.options.startNode);
+                        if (startNodeData) {
+                            const nodeIndex = this.tourData.nodes.indexOf(startNodeData);
+                            await this.engine.loadNode(startNodeData, nodeIndex);
+                        }
+                    }
+                    
+                    // Enter fullscreen if requested
+                    if (this.options.fullscreen) {
+                        setTimeout(() => {
+                            document.documentElement.requestFullscreen().catch(err => {
+                                console.warn('Fullscreen request failed:', err);
+                            });
+                        }, 1000);
+                    }
+                    
+                    // Auto-play if requested
+                    if (this.options.autoplay) {
+                        setTimeout(() => {
+                            if (this.engine.nextNode) {
+                                this.engine.nextNode();
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Show tour, hide loading
+                    this.showTour();
+                    
+                    // Track analytics
+                    this.trackTourView();
+                    
+                    console.log('Tour viewer loaded successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to load tour:', error);
+                    this.showError(error.message);
+                }
+            }
+            
+            async loadDemoTour() {
+                try {
+                    // Load test metadata
+                    const response = await fetch('test-metadata.json');
+                    if (!response.ok) {
+                        throw new Error('Failed to load demo tour metadata');
+                    }
+                    
+                    const metadata = await response.json();
+                    
+                    // Create demo tour data structure
+                    this.tourData = {
+                        tour_name: 'Demo Virtual Tour',
+                        property_name: 'Sample Property',
+                        description: 'Experience this demo 360° virtual tour showcasing our tour technology.',
+                        nodes: metadata.nodes.map(node => ({
+                            ...node,
+                            // Ensure we use the correct image path (relative to loft-tour directory)
+                            imageUrl: `../uploads/loft-tours/${node.image}`
+                        }))
+                    };
+                    
+                    // Update page metadata for demo
+                    document.title = 'Demo Virtual Tour - Hauzisha';
+                    document.querySelector('meta[name="description"]').content = this.tourData.description;
+                    
+                    // Wait for Three.js to load before initializing engine
+                    await this.waitForThreeJS();
+                    
+                    // Initialize tour engine with SIMPLE configuration
+                    const container = document.getElementById('viewer-canvas-container');
+                    this.engine = new LoftTourEngine(container, {
+                        viewerMode: true,
+                        hideUI: this.options.hideUI,
+                        // DISABLE PROBLEMATIC PERFORMANCE MONITORING
+                        enablePerformanceMonitoring: false,
+                        enableNetworkOptimization: false,
+                        enableMemoryOptimization: false,
+                        enableDeviceCapabilities: false
+                    });
+                    
+                    // Wait for engine to be fully initialized
+                    await this.waitForEngineReady();
+                    
+                    // Initialize sharing
+                    if (typeof LoftTourSharing !== 'undefined') {
+                        this.sharing = new LoftTourSharing(this.tourData, {
+                            baseUrl: window.location.origin + window.location.pathname,
+                            enableSocialSharing: true,
+                            enableEmbedCode: true
+                        });
+                    }
+                    
+                    // Load the tour
+                    await this.engine.loadTour(this.tourData);
+                    
+                    // Auto-start if enabled
+                    if (this.options.autoplay) {
+                        setTimeout(() => {
+                            if (this.engine && this.engine.nextNode) {
+                                this.engine.nextNode();
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Show tour, hide loading
+                    this.showTour();
+                    
+                    console.log('Demo tour loaded successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to load demo tour:', error);
+                    this.showError('Failed to load demo tour: ' + error.message);
+                }
+            }
+            
+            async waitForThreeJS() {
+                try {
+                    // Use the global promise that's set up in the script section
+                    if (window.threeJSReady) {
+                        await window.threeJSReady;
+                    }
+                    
+                    // Also check for Marzipano
+                    return new Promise((resolve, reject) => {
+                        let attempts = 0;
+                        const maxAttempts = 100; // 10 seconds max
+                        
+                        const checkLibraries = () => {
+                            const threeLoaded = typeof THREE !== 'undefined';
+                            const marzipanoLoaded = typeof Marzipano !== 'undefined';
+                            
+                            if (threeLoaded && marzipanoLoaded) {
+                                console.log('✅ Three.js and Marzipano loaded successfully');
+                                resolve();
+                            } else if (attempts >= maxAttempts) {
+                                const missing = [];
+                                if (!threeLoaded) missing.push('Three.js');
+                                if (!marzipanoLoaded) missing.push('Marzipano');
+                                reject(new Error(`Failed to load: ${missing.join(', ')} after 10 seconds`));
+                            } else {
+                                attempts++;
+                                if (attempts % 20 === 0) {
+                                    console.log(`Waiting for libraries... Three.js: ${threeLoaded}, Marzipano: ${marzipanoLoaded}`);
+                                }
+                                setTimeout(checkLibraries, 100);
+                            }
+                        };
+                        
+                        checkLibraries();
+                    });
+                } catch (error) {
+                    console.error('Library loading error:', error);
+                    throw error;
+                }
+            }
+            
+            async waitForEngineReady() {
+                return new Promise((resolve, reject) => {
+                    let attempts = 0;
+                    const maxAttempts = 100; // 10 seconds max
+                    
+                    const checkEngine = () => {
+                        const engineReady = this.engine && 
+                                          this.engine.marzipanoViewer && 
+                                          this.engine.layerManager && 
+                                          this.engine.transitionManager;
+                        
+                        if (engineReady) {
+                            console.log('✅ Tour engine fully initialized and ready');
+                            resolve();
+                        } else if (attempts >= maxAttempts) {
+                            reject(new Error('Tour engine failed to initialize after 10 seconds'));
+                        } else {
+                            attempts++;
+                            if (attempts % 20 === 0) {
+                                console.log(`⏳ Waiting for engine... (${attempts}/100)`);
+                            }
+                            setTimeout(checkEngine, 100);
+                        }
+                    };
+                    
+                    checkEngine();
+                });
+            }
+            
+            updatePageMetadata(tourData) {
+                // Update page title
+                document.title = `${tourData.tour_name} - Virtual Tour`;
+                
+                // Update meta description
+                const description = tourData.description || 
+                    `Experience ${tourData.property_name || 'this amazing property'} with our immersive 360° virtual tour.`;
+                document.querySelector('meta[name="description"]').content = description;
+                
+                // Get social preview data if available
+                const socialPreview = tourData.social_preview || {};
+                
+                // Update Open Graph tags
+                document.querySelector('meta[property="og:title"]').content = socialPreview.title || `${tourData.tour_name} - Virtual Tour`;
+                document.querySelector('meta[property="og:description"]').content = socialPreview.description || description;
+                document.querySelector('meta[property="og:url"]').content = window.location.href;
+                
+                // Update tour info display
+                document.getElementById('tour-title').textContent = tourData.tour_name;
+                document.getElementById('tour-description').textContent = 
+                    tourData.property_name ? `${tourData.property_name} • ${tourData.nodes?.length || 0} scenes` : 
+                    `${tourData.nodes?.length || 0} scenes to explore`;
+            }
+            
+            showTour() {
+                document.getElementById('viewer-loading').style.display = 'none';
+                document.getElementById('viewer-error').style.display = 'none';
+                document.getElementById('tour-viewer').style.display = 'block';
+            }
+            
+            showError(message) {
+                document.getElementById('viewer-loading').style.display = 'none';
+                document.getElementById('tour-viewer').style.display = 'none';
+                
+                const errorElement = document.getElementById('viewer-error');
+                document.getElementById('error-message').textContent = message;
+                errorElement.style.display = 'block';
+            }
+            
+            async trackTourView() {
+                try {
+                    const sessionId = this.generateSessionId();
+                    await fetch('/api/index.php/track-loft-tour-analytics', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tour_id: this.tourId,
+                            event_type: 'tour_view',
+                            session_id: sessionId,
+                            user_agent: navigator.userAgent,
+                            referrer: document.referrer
+                        })
+                    });
+                } catch (error) {
+                    console.warn('Failed to track tour view:', error);
+                }
+            }
+            
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+        
+        // Initialize viewer when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoftTourSimpleViewer();
+        });
+        
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'f':
+                case 'F':
+                    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                        e.preventDefault();
+                        if (!document.fullscreenElement) {
+                            document.documentElement.requestFullscreen();
+                        } else {
+                            document.exitFullscreen();
+                        }
+                    }
+                    break;
+                case 's':
+                case 'S':
+                    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                        e.preventDefault();
+                        document.getElementById('viewer-share-btn').click();
+                    }
+                    break;
+                case 'Escape':
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

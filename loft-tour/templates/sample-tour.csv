@@ -1,0 +1,8 @@
+node_id,label,image,next_node,rotation_h,rotation_v,initial_yaw,initial_pitch,order
+gate,Main Gate,gate.jpg,driveway,45,15,0,0,0
+driveway,Driveway,driveway.jpg,entrance,30,10,0,0,1
+entrance,Main Entrance,entrance.jpg,living_room,40,12,0,0,2
+living_room,Living Room,living_room.jpg,kitchen,50,15,0,0,3
+kitchen,Modern Kitchen,kitchen.jpg,bedroom,45,12,0,0,4
+bedroom,Master Bedroom,bedroom.jpg,balcony,35,10,0,0,5
+balcony,Balcony View,balcony.jpg,,60,20,0,0,6

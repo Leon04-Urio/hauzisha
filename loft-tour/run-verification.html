@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOFT³ Offline Deployment Verification</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .status.info {
+            background: #1a4d66;
+            color: #87ceeb;
+        }
+        
+        .status.success {
+            background: #1a4d1a;
+            color: #90ee90;
+        }
+        
+        .status.error {
+            background: #4d1a1a;
+            color: #ff6b6b;
+        }
+        
+        .status.warning {
+            background: #4d4d1a;
+            color: #ffeb3b;
+        }
+        
+        .log-output {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            background: #00cc00;
+        }
+        
+        button:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00cc00);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LOFT³ Offline Deployment Verification</h1>
+        
+        <div class="controls">
+            <button onclick="runVerification()" id="run-btn">Run Verification</button>
+            <button onclick="clearLog()" id="clear-btn">Clear Log</button>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        
+        <div class="status info" id="status">
+            Ready to run verification tests...
+        </div>
+        
+        <div class="log-output" id="log-output">
+            Waiting for verification to start...
+        </div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="lib/marzipano.min.js"></script>
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-viewer.js"></script>
+    <script src="js/loft-tour-sharing.js"></script>
+    <script src="js/loft-tour-offline-packager.js"></script>
+    <script src="js/loft-tour-export-ui.js"></script>
+
+    <script>
+        let logOutput = '';
+        let currentTest = 0;
+        let totalTests = 6;
+
+        // Override console.log to capture output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            const message = args.join(' ');
+            logOutput += message + '\n';
+            updateLogDisplay();
+            originalLog.apply(console, args);
+        };
+
+        function updateLogDisplay() {
+            const logElement = document.getElementById('log-output');
+            logElement.textContent = logOutput;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function clearLog() {
+            logOutput = '';
+            updateLogDisplay();
+            updateStatus('Log cleared', 'info');
+            updateProgress(0);
+        }
+
+        async function runVerification() {
+            const runBtn = document.getElementById('run-btn');
+            runBtn.disabled = true;
+            
+            try {
+                updateStatus('Starting verification tests...', 'info');
+                updateProgress(0);
+                
+                // Import and run the verification script
+                const script = document.createElement('script');
+                script.src = 'verify-offline-deployment.js';
+                
+                script.onload = async () => {
+                    try {
+                        updateStatus('Running verification tests...', 'info');
+                        
+                        // The verification script will run automatically
+                        // We'll monitor the progress through console output
+                        
+                        // Wait for tests to complete (timeout after 30 seconds)
+                        let completed = false;
+                        let timeout = setTimeout(() => {
+                            if (!completed) {
+                                updateStatus('Verification timed out', 'error');
+                                runBtn.disabled = false;
+                            }
+                        }, 30000);
+                        
+                        // Monitor for completion
+                        const checkCompletion = setInterval(() => {
+                            if (logOutput.includes('Verification complete:')) {
+                                completed = true;
+                                clearTimeout(timeout);
+                                clearInterval(checkCompletion);
+                                
+                                if (logOutput.includes('All tests passed!')) {
+                                    updateStatus('All tests passed! Offline deployment is working correctly.', 'success');
+                                    updateProgress(100);
+                                } else {
+                                    updateStatus('Some tests failed. Check the log for details.', 'error');
+                                    updateProgress(100);
+                                }
+                                
+                                runBtn.disabled = false;
+                            }
+                        }, 500);
+                        
+                    } catch (error) {
+                        updateStatus(`Verification failed: ${error.message}`, 'error');
+                        runBtn.disabled = false;
+                    }
+                };
+                
+                script.onerror = () => {
+                    updateStatus('Failed to load verification script', 'error');
+                    runBtn.disabled = false;
+                };
+                
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, 'error');
+                runBtn.disabled = false;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Ready to run verification tests...', 'info');
+            console.log('LOFT³ Offline Deployment Verification Tool loaded');
+            console.log('Click "Run Verification" to start testing the offline packaging functionality');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Overlay Demo - LOFT³</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        #demo-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #overlay-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 300px;
+            border: 2px solid #4CAF50;
+        }
+        
+        #overlay-info h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .info-item {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .info-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        
+        .info-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-indicator.active {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+        
+        .status-indicator.inactive {
+            background: #666;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 8px;
+            z-index: 1000;
+            text-align: center;
+            border: 2px solid #4CAF50;
+        }
+        
+        #instructions p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .highlight {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        #layer-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            border: 2px solid #4CAF50;
+        }
+        
+        #layer-controls h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .layer-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .layer-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .slider-group {
+            margin: 5px 0;
+        }
+        
+        .slider-group label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            outline: none;
+            border-radius: 2px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            float: right;
+            color: #4CAF50;
+            font-size: 11px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="demo-container"></div>
+    
+    <div id="overlay-info">
+        <h3>
+            <span class="status-indicator active"></span>
+            Three.js Overlay Active
+        </h3>
+        <div class="info-item">
+            <div class="info-label">Render Mode</div>
+            <div class="info-value">Marzipano + Three.js</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Active Layers</div>
+            <div class="info-value" id="layer-count">0</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">FPS</div>
+            <div class="info-value" id="fps-counter">60</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Camera Yaw</div>
+            <div class="info-value" id="camera-yaw">0°</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Camera Pitch</div>
+            <div class="info-value" id="camera-pitch">0°</div>
+        </div>
+    </div>
+    
+    <div id="layer-controls">
+        <h3>Layer Controls</h3>
+        <div id="layer-list"></div>
+        <button onclick="addRandomLayer()">Add Random Layer</button>
+        <button onclick="clearAllLayers()">Clear All Layers</button>
+    </div>
+    
+    <div id="instructions">
+        <p><span class="highlight">Drag</span> to look around</p>
+        <p>Watch the <span class="highlight">parallax layers</span> move at different speeds</p>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Marzipano (Local) -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Components -->
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    
+    <script>
+        let engine = null;
+        let layerIdCounter = 0;
+        
+        // Initialize demo
+        async function initDemo() {
+            try {
+                const container = document.getElementById('demo-container');
+                engine = new LoftTourEngine(container);
+                
+                // Create a simple test panorama (solid color for demo)
+                const testTourData = {
+                    nodes: [
+                        {
+                            id: 'demo-node',
+                            label: 'Demo Room',
+                            image: createTestPanorama(),
+                            initialYaw: 0,
+                            initialPitch: 0,
+                            rotationLimits: {
+                                h: 45,
+                                v: 15,
+                                maxFov: 120,
+                                minFov: 60
+                            },
+                            layers: []
+                        }
+                    ]
+                };
+                
+                await engine.loadTour(testTourData);
+                
+                // Add some demo layers
+                addDemoLayers();
+                
+                // Start info updates
+                startInfoUpdates();
+                
+                console.log('Demo initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize demo:', error);
+                alert('Failed to initialize demo. Check console for details.');
+            }
+        }
+        
+        // Create a test panorama (gradient)
+        function createTestPanorama() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.5, '#16213e');
+            gradient.addColorStop(1, '#0f3460');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add some grid lines for reference
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 2;
+            
+            for (let x = 0; x < canvas.width; x += 100) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += 100) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            return canvas.toDataURL();
+        }
+        
+        // Add demo layers
+        function addDemoLayers() {
+            const demoLayers = [
+                {
+                    id: 'layer-bg',
+                    name: 'Background Circle',
+                    position: { x: 0.3, y: 0.3 },
+                    scale: 0.8,
+                    parallaxFactor: 0.2,
+                    opacity: 0.6,
+                    color: '#ff6b6b'
+                },
+                {
+                    id: 'layer-mid',
+                    name: 'Midground Square',
+                    position: { x: 0.5, y: 0.5 },
+                    scale: 0.6,
+                    parallaxFactor: 0.5,
+                    opacity: 0.7,
+                    color: '#4ecdc4'
+                },
+                {
+                    id: 'layer-fg',
+                    name: 'Foreground Triangle',
+                    position: { x: 0.7, y: 0.6 },
+                    scale: 0.5,
+                    parallaxFactor: 0.8,
+                    opacity: 0.8,
+                    color: '#ffe66d'
+                }
+            ];
+            
+            demoLayers.forEach((layerData, index) => {
+                const imageUrl = createLayerImage(layerData.color, layerData.name);
+                
+                engine.layerManager.addLayer({
+                    id: layerData.id,
+                    name: layerData.name,
+                    image: imageUrl,
+                    position: layerData.position,
+                    scale: layerData.scale,
+                    parallaxFactor: layerData.parallaxFactor,
+                    opacity: layerData.opacity
+                }, index);
+            });
+            
+            updateLayerControls();
+        }
+        
+        // Create a simple layer image
+        function createLayerImage(color, shape) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = color;
+            
+            if (shape.includes('Circle')) {
+                ctx.beginPath();
+                ctx.arc(100, 100, 80, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (shape.includes('Square')) {
+                ctx.fillRect(30, 30, 140, 140);
+            } else if (shape.includes('Triangle')) {
+                ctx.beginPath();
+                ctx.moveTo(100, 20);
+                ctx.lineTo(180, 180);
+                ctx.lineTo(20, 180);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            return canvas.toDataURL();
+        }
+        
+        // Update layer controls UI
+        function updateLayerControls() {
+            const layerList = document.getElementById('layer-list');
+            layerList.innerHTML = '';
+            
+            engine.layerManager.layers.forEach((layer, index) => {
+                const userData = layer.userData;
+                const layerId = userData.id;
+                const layerName = userData.name || `Layer ${index}`;
+                
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.innerHTML = `
+                    <div class="layer-name">${layerName}</div>
+                    <div class="slider-group">
+                        <label>
+                            Parallax Factor
+                            <span class="slider-value" id="parallax-val-${index}">${userData.parallaxFactor.toFixed(2)}</span>
+                        </label>
+                        <input type="range" min="0" max="1" step="0.1" value="${userData.parallaxFactor}" 
+                               onchange="updateLayerParallax('${layerId}', this.value, ${index})">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            Opacity
+                            <span class="slider-value" id="opacity-val-${index}">${userData.layerData.opacity.toFixed(2)}</span>
+                        </label>
+                        <input type="range" min="0" max="1" step="0.1" value="${userData.layerData.opacity}" 
+                               onchange="updateLayerOpacity('${layerId}', this.value, ${index})">
+                    </div>
+                    <button onclick="removeLayer('${layerId}')">Remove Layer</button>
+                `;
+                
+                layerList.appendChild(layerItem);
+            });
+        }
+        
+        // Update layer parallax factor
+        function updateLayerParallax(layerId, value, index) {
+            engine.layerManager.updateLayer(layerId, {
+                parallaxFactor: parseFloat(value)
+            });
+            document.getElementById(`parallax-val-${index}`).textContent = parseFloat(value).toFixed(2);
+        }
+        
+        // Update layer opacity
+        function updateLayerOpacity(layerId, value, index) {
+            engine.layerManager.updateLayer(layerId, {
+                opacity: parseFloat(value)
+            });
+            document.getElementById(`opacity-val-${index}`).textContent = parseFloat(value).toFixed(2);
+        }
+        
+        // Remove layer
+        function removeLayer(layerId) {
+            engine.layerManager.removeLayerById(layerId);
+            updateLayerControls();
+            updateLayerCount();
+        }
+        
+        // Add random layer
+        function addRandomLayer() {
+            layerIdCounter++;
+            
+            const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181'];
+            const shapes = ['Circle', 'Square', 'Triangle'];
+            
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+            
+            const layerData = {
+                id: `random-layer-${layerIdCounter}`,
+                name: `Random ${randomShape}`,
+                image: createLayerImage(randomColor, randomShape),
+                position: {
+                    x: 0.2 + Math.random() * 0.6,
+                    y: 0.2 + Math.random() * 0.6
+                },
+                scale: 0.4 + Math.random() * 0.6,
+                parallaxFactor: Math.random(),
+                opacity: 0.5 + Math.random() * 0.5
+            };
+            
+            engine.layerManager.addLayer(layerData, engine.layerManager.layers.length);
+            updateLayerControls();
+            updateLayerCount();
+        }
+        
+        // Clear all layers
+        function clearAllLayers() {
+            engine.layerManager.clearLayers();
+            updateLayerControls();
+            updateLayerCount();
+        }
+        
+        // Update info display
+        function startInfoUpdates() {
+            setInterval(() => {
+                updateLayerCount();
+                updateFPS();
+                updateCameraInfo();
+            }, 100);
+        }
+        
+        function updateLayerCount() {
+            document.getElementById('layer-count').textContent = engine.layerManager.layers.length;
+        }
+        
+        function updateFPS() {
+            document.getElementById('fps-counter').textContent = engine.fps || 60;
+        }
+        
+        function updateCameraInfo() {
+            if (engine.currentView) {
+                const coords = engine.currentView.coordinates();
+                document.getElementById('camera-yaw').textContent = 
+                    engine.rad2deg(coords.yaw).toFixed(1) + '°';
+                document.getElementById('camera-pitch').textContent = 
+                    engine.rad2deg(coords.pitch).toFixed(1) + '°';
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initDemo();
+        });
+    </script>
+</body>
+</html>

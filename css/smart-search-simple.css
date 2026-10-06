@@ -1,0 +1,89 @@
+/* Simple Smart Search Styling */
+.type-dropdown {
+    font-family: 'Nunito Sans', sans-serif;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    /* border: 1px solid #e0e0e0; */
+    border-radius: 0 0 12px 12px;
+    background: #ffffff;
+    z-index: 1000;
+}
+
+/* Google Places Autocomplete Styling (without !important) */
+.pac-container {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    font-family: 'Nunito Sans', sans-serif;
+    z-index: 1000;
+    margin-top: 2px;
+}
+
+.pac-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.pac-item:hover {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #000;
+}
+
+.pac-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 12px 12px;
+}
+
+.pac-item-query {
+    font-weight: 600;
+    color: #333;
+}
+
+.pac-matched {
+    font-weight: 700;
+    color: #ffd700;
+}
+
+.pac-item:hover .pac-matched {
+    color: #000;
+}
+
+/* Search input focus states */
+.search-item input:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+/* Enhanced search bar styling */
+.search-item {
+    position: relative;
+}
+
+.search-item input[readonly] {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.search-item input[readonly]:hover {
+    background: rgba(255, 255, 255, 1);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .type-dropdown,
+    .pac-container {
+        font-size: 0.9rem;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .pac-item {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+
+    }
+}

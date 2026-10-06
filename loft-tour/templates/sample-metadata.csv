@@ -1,0 +1,22 @@
+# CSV Metadata Template for LOFT³ Tours
+# This template shows the required and optional fields for CSV-based tour metadata
+# Note: CSV format does not support layers - use JSON format for layer support
+
+# Required Fields:
+# - node_id: Unique identifier for each node
+# - label: Display name for the node
+# - image: Filename of the panorama image
+
+# Optional Fields:
+# - next_node: ID of the next node in sequence (empty for end nodes)
+# - rotation_h: Horizontal rotation limit in degrees (0-180, default: 30)
+# - rotation_v: Vertical rotation limit in degrees (0-90, default: 10)
+# - initial_yaw: Starting horizontal rotation in degrees (default: 0)
+# - initial_pitch: Starting vertical rotation in degrees (default: 0)
+# - order: Display order for navigation (default: 0)
+# - description: Optional description of the space
+
+node_id,label,image,next_node,rotation_h,rotation_v,initial_yaw,initial_pitch,order,description
+entrance,Main Entrance,entrance.jpg,living_room,30,10,0,0,0,"Welcome to this beautiful property. The main entrance showcases elegant design."
+living_room,Living Room,living_room.jpg,bedroom,45,15,0,0,1,"Spacious living area with modern furnishings and natural light"
+bedroom,Master Bedroom,bedroom.jpg,,30,10,0,0,2,"Comfortable master bedroom with ensuite bathroom access"

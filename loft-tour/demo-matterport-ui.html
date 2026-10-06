@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT³ Matterport-Style UI Demo</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #demo-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+        }
+        
+        .demo-panorama {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:1" /><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23grad1)"/><text x="600" y="300" font-family="Arial" font-size="48" fill="white" text-anchor="middle" opacity="0.3">360° Panorama Placeholder</text></svg>') center/cover;
+        }
+        
+        .demo-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 50;
+        }
+        
+        .demo-info h4 {
+            margin: 0 0 10px 0;
+            color: #FFD700;
+        }
+        
+        .demo-info p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .demo-info .shortcut {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="demo-container">
+        <!-- Demo panorama background -->
+        <div class="demo-panorama"></div>
+        
+        <!-- Demo info panel -->
+        <div class="demo-info">
+            <h4>Matterport-Style UI Demo</h4>
+            <p><strong>Navigation:</strong></p>
+            <p>• <span class="shortcut">←/→</span> Previous/Next room</p>
+            <p>• <span class="shortcut">H</span> Toggle UI</p>
+            <p>• <span class="shortcut">F</span> Fullscreen</p>
+            <p>• <span class="shortcut">ESC</span> Exit</p>
+            <p><strong>Features:</strong></p>
+            <p>• Auto-hiding UI elements</p>
+            <p>• Room labels & distance overlay</p>
+            <p>• Progress indicator</p>
+            <p>• Mobile-optimized controls</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Components -->
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-matterport-ui.js"></script>
+    <script src="js/loft-tour-viewer.js"></script>
+    
+    <script>
+        // Demo tour data
+        const demoTourData = {
+            name: "Luxury Villa Tour",
+            nodes: [
+                {
+                    id: "entrance",
+                    label: "Grand Entrance",
+                    description: "Main entrance hall",
+                    imageUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'><rect width='1200' height='600' fill='%23667eea'/></svg>",
+                    labels: [
+                        { x: 0.3, y: 0.4, text: "Reception Desk" },
+                        { x: 0.7, y: 0.6, text: "Chandelier" }
+                    ]
+                },
+                {
+                    id: "living",
+                    label: "Living Room",
+                    description: "Spacious living area",
+                    imageUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'><rect width='1200' height='600' fill='%23764ba2'/></svg>",
+                    labels: [
+                        { x: 0.2, y: 0.5, text: "Fireplace" },
+                        { x: 0.8, y: 0.3, text: "Balcony Access" }
+                    ]
+                },
+                {
+                    id: "kitchen",
+                    label: "Modern Kitchen",
+                    description: "Chef's kitchen with island",
+                    imageUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'><rect width='1200' height='600' fill='%23f093fb'/></svg>",
+                    labels: [
+                        { x: 0.5, y: 0.4, text: "Kitchen Island" },
+                        { x: 0.1, y: 0.3, text: "Wine Cellar" }
+                    ]
+                },
+                {
+                    id: "master",
+                    label: "Master Bedroom",
+                    description: "Luxurious master suite",
+                    imageUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'><rect width='1200' height='600' fill='%23f9d71c'/></svg>",
+                    labels: [
+                        { x: 0.6, y: 0.5, text: "King Bed" },
+                        { x: 0.9, y: 0.2, text: "Walk-in Closet" }
+                    ]
+                },
+                {
+                    id: "balcony",
+                    label: "Ocean View Balcony",
+                    description: "Panoramic ocean views",
+                    imageUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'><rect width='1200' height='600' fill='%2327dce0'/></svg>",
+                    labels: [
+                        { x: 0.4, y: 0.7, text: "Outdoor Seating" },
+                        { x: 0.8, y: 0.1, text: "Ocean View" }
+                    ]
+                }
+            ]
+        };
+        
+        // Initialize viewer with Matterport UI
+        let viewer;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Create a mock engine for demo purposes
+                window.LoftTourEngine = class {
+                    constructor(container, config) {
+                        this.container = container;
+                        this.config = config;
+                        this.currentNodeIndex = 0;
+                        this.tourData = null;
+                    }
+                    
+                    async loadTour(tourData) {
+                        this.tourData = tourData;
+                        console.log('Demo: Tour loaded with', tourData.nodes.length, 'nodes');
+                    }
+                    
+                    async nextNode() {
+                        if (this.tourData && this.currentNodeIndex < this.tourData.nodes.length - 1) {
+                            this.currentNodeIndex++;
+                            this.updateNode();
+                        }
+                    }
+                    
+                    async previousNode() {
+                        if (this.currentNodeIndex > 0) {
+                            this.currentNodeIndex--;
+                            this.updateNode();
+                        }
+                    }
+                    
+                    async transitionTo(node, index) {
+                        this.currentNodeIndex = index;
+                        this.updateNode();
+                    }
+                    
+                    updateNode() {
+                        if (this.onNodeChange && this.tourData) {
+                            const node = this.tourData.nodes[this.currentNodeIndex];
+                            this.onNodeChange(node, this.currentNodeIndex);
+                        }
+                    }
+                    
+                    destroy() {
+                        console.log('Demo: Engine destroyed');
+                    }
+                };
+                
+                // Initialize viewer
+                viewer = new LoftTourViewer('demo-container', {
+                    useMatterportUI: true,
+                    showUI: true,
+                    enableTransitions: true
+                });
+                
+                // Load demo tour
+                setTimeout(() => {
+                    viewer.loadTour(demoTourData);
+                }, 500);
+                
+                console.log('Matterport UI Demo initialized');
+                
+            } catch (error) {
+                console.error('Demo initialization failed:', error);
+            }
+        });
+        
+        // Global functions for demo
+        window.exitViewer = function() {
+            alert('Demo: Exit viewer requested');
+        };
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (viewer) {
+                viewer.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

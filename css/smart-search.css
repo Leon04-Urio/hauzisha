@@ -1,0 +1,243 @@
+/* Smart Search Suggestions Styling */
+.type-dropdown {
+    font-family: 'Nunito Sans', sans-serif;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    /* border: 1px solid #e0e0e0; */
+    /* border-radius: 0 0 12px 12px; */
+    /* background: #ffffff; */
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+/* Google Places Autocomplete Custom Styling */
+.pac-container {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    font-family: 'Nunito Sans', sans-serif !important;
+    z-index: 1000 !important;
+    margin-top: 2px !important;
+}
+
+.pac-item {
+    padding: 14px 18px !important;
+    border-bottom: 1px solid #f5f5f5 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+}
+
+.pac-item:hover {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+    color: #000 !important;
+}
+
+.pac-item:last-child {
+    border-bottom: none !important;
+    border-radius: 0 0 12px 12px !important;
+}
+
+.pac-item:first-child {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.pac-item-query {
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+
+.pac-matched {
+    font-weight: 700 !important;
+    color: #ffd700 !important;
+}
+
+.pac-item:hover .pac-matched {
+    color: #000 !important;
+}
+
+.pac-icon {
+    margin-right: 12px !important;
+}
+
+/* Fallback custom suggestions styling */
+.suggestion-item {
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.type-item {
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px solid #282828;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active,
+.type-item:hover {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #000;
+    transform: translateX(2px);
+}
+
+.suggestion-item:last-child,
+.type-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 12px 12px;
+}
+
+.suggestion-item:first-child,
+.type-item:first-child {
+    border-radius: 0;
+}
+
+/* Location icon for suggestions */
+.suggestion-item::before {
+    content: "📍";
+    margin-right: 8px;
+    font-size: 0.9em;
+}
+
+/* Type count styling */
+.type-item .count {
+    background: #f0f0f0;
+    color: #666;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.type-item:hover .count {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+/* Search input focus states */
+.search-item input:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+/* Loading state for suggestions */
+.suggestions-loading {
+    padding: 16px 18px;
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.suggestions-loading::after {
+    content: "...";
+    animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+    40% { color: #666; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+    60% { text-shadow: .25em 0 0 #666, .5em 0 0 rgba(0,0,0,0); }
+    80%, 100% { text-shadow: .25em 0 0 #666, .5em 0 0 #666; }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .location-suggestions,
+    .type-dropdown,
+    .pac-container {
+        font-size: 0.9rem !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+    
+    .suggestion-item,
+    .type-item,
+    .pac-item {
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .suggestion-item::before {
+        font-size: 0.8em;
+        margin-right: 6px;
+    }
+    
+    .pac-icon {
+        margin-right: 8px !important;
+    }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    .location-suggestions,
+    .type-dropdown {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    
+    .suggestion-item,
+    .type-item {
+        color: #e0e0e0;
+        border-bottom-color: #444;
+    }
+    
+    .type-item .count {
+        background: #444;
+        color: #ccc;
+    }
+}
+
+/* Smooth animations */
+.location-suggestions,
+.type-dropdown {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced search bar styling */
+.search-item {
+    position: relative;
+}
+
+.search-item input[readonly] {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.search-item input[readonly]:hover {
+    background: rgba(255, 255, 255, 1);
+}
+
+/* Dropdown arrow for type input */
+.search-item input[placeholder*="Type"]::after {
+    content: "▼";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #666;
+    font-size: 0.8em;
+}

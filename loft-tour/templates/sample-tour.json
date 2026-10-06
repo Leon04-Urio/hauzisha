@@ -1,0 +1,109 @@
+{
+  "tourName": "Luxury Villa Walkthrough",
+  "description": "A stunning 3-bedroom villa with modern amenities",
+  "nodes": [
+    {
+      "id": "gate",
+      "label": "Main Gate",
+      "image": "gate.jpg",
+      "nextNode": "driveway",
+      "rotationLimits": { "h": 45, "v": 15 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "order": 0,
+      "layers": [
+        {
+          "name": "security_camera",
+          "image": "security_camera.png",
+          "position": { "x": 0.85, "y": 0.25 },
+          "parallaxFactor": 0.3,
+          "scale": 0.8,
+          "rotation": 0,
+          "opacity": 1.0
+        }
+      ]
+    },
+    {
+      "id": "driveway",
+      "label": "Driveway",
+      "image": "driveway.jpg",
+      "nextNode": "entrance",
+      "rotationLimits": { "h": 30, "v": 10 },
+      "order": 1,
+      "layers": [
+        {
+          "name": "car",
+          "image": "luxury_car.png",
+          "position": { "x": 0.6, "y": 0.55 },
+          "parallaxFactor": 0.7,
+          "scale": 1.2
+        }
+      ]
+    },
+    {
+      "id": "entrance",
+      "label": "Main Entrance",
+      "image": "entrance.jpg",
+      "nextNode": "living_room",
+      "rotationLimits": { "h": 40, "v": 12 },
+      "order": 2
+    },
+    {
+      "id": "living_room",
+      "label": "Living Room",
+      "image": "living_room.jpg",
+      "nextNode": "kitchen",
+      "rotationLimits": { "h": 50, "v": 15 },
+      "order": 3,
+      "layers": [
+        {
+          "name": "sofa",
+          "image": "modern_sofa.png",
+          "position": { "x": 0.4, "y": 0.6 },
+          "parallaxFactor": 0.6,
+          "scale": 1.0
+        },
+        {
+          "name": "painting",
+          "image": "wall_art.png",
+          "position": { "x": 0.5, "y": 0.3 },
+          "parallaxFactor": 0.2,
+          "scale": 0.7
+        }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "label": "Modern Kitchen",
+      "image": "kitchen.jpg",
+      "nextNode": "bedroom",
+      "rotationLimits": { "h": 45, "v": 12 },
+      "order": 4
+    },
+    {
+      "id": "bedroom",
+      "label": "Master Bedroom",
+      "image": "bedroom.jpg",
+      "nextNode": "balcony",
+      "rotationLimits": { "h": 35, "v": 10 },
+      "order": 5
+    },
+    {
+      "id": "balcony",
+      "label": "Balcony View",
+      "image": "balcony.jpg",
+      "nextNode": null,
+      "rotationLimits": { "h": 60, "v": 20 },
+      "order": 6,
+      "layers": [
+        {
+          "name": "city_view",
+          "image": "city_skyline.png",
+          "position": { "x": 0.5, "y": 0.4 },
+          "parallaxFactor": 0.1,
+          "scale": 1.5
+        }
+      ]
+    }
+  ]
+}

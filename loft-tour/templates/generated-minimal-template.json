@@ -1,0 +1,18 @@
+{
+    "tourName": "Minimal Tour Example",
+    "description": "A minimal tour with only required fields",
+    "nodes": [
+        {
+            "id": "start",
+            "label": "Starting Point",
+            "image": "start.jpg",
+            "nextNode": "end"
+        },
+        {
+            "id": "end",
+            "label": "End Point",
+            "image": "end.jpg",
+            "nextNode": null
+        }
+    ]
+}

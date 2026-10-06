@@ -1,0 +1,305 @@
+{
+  "$schema": "https://loft-tour.schema.json",
+  "version": "1.0",
+  "tourName": "Luxury Villa Complete Tour",
+  "description": "Comprehensive tour showcasing all LOFT³ features including multiple layers and complex navigation",
+  "metadata": {
+    "created": "2024-01-17",
+    "author": "LOFT³ System",
+    "propertyType": "luxury_residential",
+    "totalNodes": 8,
+    "estimatedDuration": "5-7 minutes"
+  },
+  "settings": {
+    "autoAdvance": false,
+    "showProgress": true,
+    "enableGyroscope": true,
+    "defaultTransitionDuration": 1500
+  },
+  "nodes": [
+    {
+      "id": "gate",
+      "label": "Security Gate",
+      "description": "Private gated entrance with security features",
+      "image": "gate.jpg",
+      "nextNode": "driveway",
+      "rotationLimits": { "h": 45, "v": 15 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 0,
+      "layers": [
+        {
+          "name": "security_camera",
+          "description": "Security camera system",
+          "image": "security_camera.png",
+          "position": { "x": 0.85, "y": 0.25 },
+          "parallaxFactor": 0.3,
+          "scale": 0.8,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 1
+        },
+        {
+          "name": "intercom_system",
+          "description": "Modern intercom system",
+          "image": "intercom.png",
+          "position": { "x": 0.15, "y": 0.4 },
+          "parallaxFactor": 0.4,
+          "scale": 1.0,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 2
+        }
+      ]
+    },
+    {
+      "id": "driveway",
+      "label": "Private Driveway",
+      "description": "Elegant curved driveway leading to the main entrance",
+      "image": "driveway.jpg",
+      "nextNode": "entrance",
+      "rotationLimits": { "h": 60, "v": 20 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 1,
+      "layers": [
+        {
+          "name": "luxury_car",
+          "description": "Luxury vehicle showcase",
+          "image": "luxury_car.png",
+          "position": { "x": 0.3, "y": 0.7 },
+          "parallaxFactor": 0.8,
+          "scale": 1.5,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 3
+        }
+      ]
+    },
+    {
+      "id": "entrance",
+      "label": "Grand Entrance",
+      "description": "Impressive main entrance with marble columns and water features",
+      "image": "entrance.jpg",
+      "nextNode": "foyer",
+      "rotationLimits": { "h": 40, "v": 15 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 2,
+      "layers": [
+        {
+          "name": "water_fountain",
+          "description": "Elegant water fountain feature",
+          "image": "fountain.png",
+          "position": { "x": 0.5, "y": 0.6 },
+          "parallaxFactor": 0.6,
+          "scale": 1.2,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 2
+        },
+        {
+          "name": "entrance_lighting",
+          "description": "Architectural lighting features",
+          "image": "lighting.png",
+          "position": { "x": 0.7, "y": 0.3 },
+          "parallaxFactor": 0.2,
+          "scale": 0.9,
+          "rotation": 0,
+          "opacity": 0.8,
+          "visible": true,
+          "depthOrder": 1
+        }
+      ]
+    },
+    {
+      "id": "foyer",
+      "label": "Grand Foyer",
+      "description": "Spacious foyer with crystal chandelier and marble flooring",
+      "image": "foyer.jpg",
+      "nextNode": "living_room",
+      "rotationLimits": { "h": 50, "v": 20 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 3,
+      "layers": [
+        {
+          "name": "crystal_chandelier",
+          "description": "Stunning crystal chandelier",
+          "image": "chandelier.png",
+          "position": { "x": 0.5, "y": 0.2 },
+          "parallaxFactor": 0.1,
+          "scale": 1.3,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 0
+        },
+        {
+          "name": "art_collection",
+          "description": "Curated art collection",
+          "image": "artwork.png",
+          "position": { "x": 0.8, "y": 0.5 },
+          "parallaxFactor": 0.5,
+          "scale": 1.0,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 2
+        }
+      ]
+    },
+    {
+      "id": "living_room",
+      "label": "Main Living Area",
+      "description": "Open-concept living space with floor-to-ceiling windows",
+      "image": "living_room.jpg",
+      "nextNode": "kitchen",
+      "rotationLimits": { "h": 70, "v": 25 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 4,
+      "layers": [
+        {
+          "name": "designer_furniture",
+          "description": "Custom designer furniture set",
+          "image": "furniture.png",
+          "position": { "x": 0.4, "y": 0.6 },
+          "parallaxFactor": 0.7,
+          "scale": 1.4,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 3
+        },
+        {
+          "name": "fireplace",
+          "description": "Modern gas fireplace",
+          "image": "fireplace.png",
+          "position": { "x": 0.6, "y": 0.5 },
+          "parallaxFactor": 0.4,
+          "scale": 1.1,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 1
+        }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "label": "Gourmet Kitchen",
+      "description": "Professional-grade kitchen with marble countertops and premium appliances",
+      "image": "kitchen.jpg",
+      "nextNode": "master_bedroom",
+      "rotationLimits": { "h": 60, "v": 20 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 5,
+      "layers": [
+        {
+          "name": "kitchen_island",
+          "description": "Large marble kitchen island",
+          "image": "island.png",
+          "position": { "x": 0.5, "y": 0.7 },
+          "parallaxFactor": 0.8,
+          "scale": 1.6,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 4
+        },
+        {
+          "name": "premium_appliances",
+          "description": "High-end kitchen appliances",
+          "image": "appliances.png",
+          "position": { "x": 0.2, "y": 0.5 },
+          "parallaxFactor": 0.3,
+          "scale": 1.0,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 2
+        }
+      ]
+    },
+    {
+      "id": "master_bedroom",
+      "label": "Master Suite",
+      "description": "Luxurious master bedroom with walk-in closet and ensuite bathroom",
+      "image": "master_bedroom.jpg",
+      "nextNode": "balcony",
+      "rotationLimits": { "h": 45, "v": 15 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 6,
+      "layers": [
+        {
+          "name": "king_bed",
+          "description": "Custom king-size bed",
+          "image": "bed.png",
+          "position": { "x": 0.5, "y": 0.6 },
+          "parallaxFactor": 0.6,
+          "scale": 1.3,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 3
+        },
+        {
+          "name": "walk_in_closet",
+          "description": "Spacious walk-in closet",
+          "image": "closet.png",
+          "position": { "x": 0.8, "y": 0.4 },
+          "parallaxFactor": 0.4,
+          "scale": 0.9,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 1
+        }
+      ]
+    },
+    {
+      "id": "balcony",
+      "label": "Private Balcony",
+      "description": "Stunning balcony with panoramic city views and outdoor seating",
+      "image": "balcony.jpg",
+      "nextNode": null,
+      "rotationLimits": { "h": 90, "v": 30 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 7,
+      "layers": [
+        {
+          "name": "outdoor_furniture",
+          "description": "Premium outdoor furniture set",
+          "image": "outdoor_furniture.png",
+          "position": { "x": 0.3, "y": 0.7 },
+          "parallaxFactor": 0.9,
+          "scale": 1.2,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 4
+        },
+        {
+          "name": "city_skyline",
+          "description": "Beautiful city skyline view",
+          "image": "skyline.png",
+          "position": { "x": 0.5, "y": 0.4 },
+          "parallaxFactor": 0.1,
+          "scale": 2.0,
+          "rotation": 0,
+          "opacity": 0.7,
+          "visible": true,
+          "depthOrder": 0
+        }
+      ]
+    }
+  ]
+}

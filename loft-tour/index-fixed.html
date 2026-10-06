@@ -1,0 +1,2177 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT Automated Tour Generator</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <link rel="stylesheet" href="css/loft-tour-sharing.css">
+    <link rel="stylesheet" href="css/loft-tour-export.css">
+    <style>
+        /* Essential styles for upload functionality */
+        .drop-zone.processing {
+            border-color: #007bff;
+            background: #e3f2fd;
+            opacity: 0.8;
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background: #ffeaea;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #d4af37;
+            background: #fff9e6;
+        }
+        
+        /* Enhanced tool button styles */
+        .tool-btn {
+            width: 40px !important;
+            height: 40px !important;
+            border: none !important;
+            background: #f8f9fa !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            color: #666 !important;
+            font-size: 16px !important;
+        }
+        
+        .tool-btn:hover {
+            background: #e9ecef !important;
+            color: #333 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .tool-btn.active {
+            background: #d4af37 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .editor-tools {
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+            padding: 10px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Visual editor canvas styles */
+        .layer-editor-canvas {
+            border-radius: 8px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+            cursor: crosshair !important;
+        }
+        
+        .visual-layer-editor {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        .editor-canvas-container {
+            flex: 1 !important;
+            position: relative !important;
+            background: #f8f9fa !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+        
+        .editor-overlay {
+            position: absolute !important;
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            pointer-events: none !important;
+        }
+        
+        .editor-overlay > * {
+            pointer-events: auto !important;
+        }
+        
+        /* Layer properties panel styles */
+        .layer-properties-panel {
+            background: white !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            overflow: hidden !important;
+        }
+        
+        .panel-header {
+            padding: 15px 20px !important;
+            background: #f8f9fa !important;
+            border-bottom: 1px solid #e9ecef !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        .btn-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border: none !important;
+            background: transparent !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #666 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .btn-icon:hover {
+            background: #e9ecef !important;
+            color: #333 !important;
+        }
+        
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .preview-thumbnail {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .preview-info {
+            flex: 1;
+        }
+        
+        .preview-name {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .preview-size {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        /* Measurement inputs styles */
+        .measurement-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .input-with-unit input {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .input-with-unit .unit {
+            padding: 0.75rem;
+            background: #e9ecef;
+            color: #666;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-left: 1px solid #ddd;
+        }
+        
+        .measurement-help, .floorplan-help {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .measurement-help i, .floorplan-help i {
+            color: #d4af37;
+        }
+        
+        /* Floor plan preview styles */
+        .floorplan-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .floorplan-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .floorplan-info {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        /* Enhanced Editor Tools */
+        .toolbar-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+        
+        .editor-tools {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Floor Plan Mapper */
+        .floorplan-mapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .mapper-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .mapper-header h3 {
+            color: white;
+            margin: 0;
+        }
+        
+        .mapper-instructions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+            font-size: 14px;
+        }
+        
+        .mapper-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        #floorplan-canvas {
+            max-width: 90%;
+            max-height: 70vh;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            cursor: crosshair;
+            background: white;
+        }
+        
+        .mapper-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* Enhanced node settings */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .measurement-calibration {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .calibration-help {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .calibration-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .calibration-inputs input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* Property Form Styles */
+        .property-form {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-row .input-group {
+            flex: 1;
+        }
+        
+        .input-group.full-width {
+            width: 100%;
+        }
+        
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+        }
+        
+        .input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .form-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .room-entry {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .room-number {
+            font-weight: 600;
+            color: #d4af37;
+        }
+        
+        .btn-remove-room {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-remove-room:hover {
+            background: rgba(220, 53, 69, 0.1);
+        }
+        
+        .room-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .btn-add-room {
+            background: #d4af37;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-add-room:hover {
+            background: #b8941f;
+            transform: translateY(-1px);
+        }
+        
+        .metadata-preview {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metadata-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #28a745;
+        }
+        
+        .metadata-status i {
+            color: #28a745;
+        }
+        
+        .node-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .node-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .node-item.selected {
+            background: #fff9e6;
+            border-color: #d4af37;
+        }
+        
+        .node-preview {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .node-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .node-thumbnail {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .node-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .node-info {
+            flex: 1;
+        }
+        
+        .node-label {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .node-id {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #d4af37;
+            transform: scale(1.2);
+        }
+        
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        #meta-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" class="app">
+        
+        <!-- Upload Section -->
+        <section id="upload-section" class="section active">
+            <div class="upload-container">
+                <div class="upload-header">
+                    <div class="logo">
+                        <i class="fas fa-cube"></i>
+                        <h1>LOFT<sup>3</sup> Tour Generator</h1>
+                    </div>
+                    <p class="tagline">Automated Matterport-Style Walkthrough Creator</p>
+                </div>
+
+                <div class="upload-grid">
+                    <!-- Panoramas Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <h3>Upload Panoramas</h3>
+                        <p>360° equirectangular images</p>
+                        <div class="drop-zone" id="pano-drop-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Drag & drop or click</span>
+                            <input type="file" id="pano-input" accept="image/*" multiple hidden>
+                        </div>
+                        <div id="pano-preview" class="preview-list"></div>
+                    </div>
+
+                    <!-- Measurement Data -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-ruler"></i>
+                        </div>
+                        <h3>Measurement Data</h3>
+                        <p>For accurate distance calculations</p>
+                        <div class="measurement-inputs">
+                            <div class="input-group">
+                                <label for="ceiling-height">Ceiling Height</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="ceiling-height" placeholder="9.5" step="0.1" min="6" max="20">
+                                    <span class="unit">ft</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="reference-length">Reference Wall Length</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="reference-length" placeholder="12.0" step="0.1" min="1" max="50">
+                                    <span class="unit">ft</span>
+                                </div>
+                            </div>
+                            <div class="measurement-help">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Measure one wall or ceiling height during photoshoot for accurate measurements</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floor Plan Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-map"></i>
+                        </div>
+                        <h3>Floor Plan</h3>
+                        <p>Interactive navigation map</p>
+                        <div class="drop-zone" id="floorplan-drop-zone">
+                            <i class="fas fa-file-image"></i>
+                            <span>Upload floor plan</span>
+                            <input type="file" id="floorplan-input" accept="image/*" hidden>
+                        </div>
+                        <div id="floorplan-preview" class="floorplan-preview"></div>
+                        <div class="floorplan-help">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Optional: Add floor plan for "you are here" navigation</span>
+                        </div>
+                    </div>
+
+                    <!-- Property Information Form -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <h3>Property Information</h3>
+                        <p>Enter property details for the tour</p>
+                        <div class="property-form">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="property-name">Property Name</label>
+                                    <input type="text" id="property-name-input" placeholder="e.g., Luxury Penthouse Suite" value="Luxury Penthouse Suite">
+                                </div>
+                                <div class="input-group">
+                                    <label for="property-location">Location</label>
+                                    <input type="text" id="property-location-input" placeholder="e.g., Manhattan, New York" value="Manhattan, New York">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="total-area-input">Total Area</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="total-area-input" placeholder="2400" value="2400">
+                                        <span class="unit">sq ft</span>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="year-built-input">Year Built</label>
+                                    <input type="number" id="year-built-input" placeholder="2023" value="2023" min="1900" max="2030">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="bedrooms-input">Bedrooms</label>
+                                    <input type="number" id="bedrooms-input" placeholder="3" value="3" min="0" max="20">
+                                </div>
+                                <div class="input-group">
+                                    <label for="bathrooms-input">Bathrooms</label>
+                                    <input type="number" id="bathrooms-input" placeholder="2" value="2" min="0" max="20" step="0.5">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group full-width">
+                                    <label for="property-description">Property Description</label>
+                                    <textarea id="property-description" placeholder="Brief description of the property..." rows="3">Premium luxury property with stunning city views and modern amenities.</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="form-section">
+                                <h4>Room Information</h4>
+                                <div id="rooms-container">
+                                    <div class="room-entry">
+                                        <div class="room-header">
+                                            <span class="room-number">Room 1</span>
+                                            <button type="button" class="btn-remove-room" onclick="removeRoom(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="room-fields">
+                                            <div class="input-group">
+                                                <label>Room Name</label>
+                                                <input type="text" class="room-name" placeholder="e.g., Grand Entrance" value="Grand Entrance">
+                                            </div>
+                                            <div class="input-group">
+                                                <label>Room Type</label>
+                                                <select class="room-type">
+                                                    <option value="Entrance">Entrance</option>
+                                                    <option value="Living Room">Living Room</option>
+                                                    <option value="Kitchen">Kitchen</option>
+                                                    <option value="Bedroom">Bedroom</option>
+                                                    <option value="Bathroom">Bathroom</option>
+                                                    <option value="Dining Room">Dining Room</option>
+                                                    <option value="Office">Office</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="input-group">
+                                                <label>Description</label>
+                                                <input type="text" class="room-description" placeholder="e.g., Marble foyer with crystal chandelier" value="Marble foyer with crystal chandelier">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-add-room" onclick="addRoom()">
+                                    <i class="fas fa-plus"></i> Add Room
+                                </button>
+                            </div>
+                            
+                            <div class="metadata-preview">
+                                <div class="preview-header">
+                                    <i class="fas fa-eye"></i>
+                                    <span>Auto-generated metadata preview</span>
+                                </div>
+                                <div class="metadata-status" id="metadata-status">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Property information complete</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layers Upload (Optional) -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>Parallax Layers</h3>
+                        <p>Optional PNG overlays</p>
+                        <div class="drop-zone" id="layer-drop-zone">
+                            <i class="fas fa-images"></i>
+                            <span>Add layers (optional)</span>
+                            <input type="file" id="layer-input" accept="image/png" multiple hidden>
+                        </div>
+                        <div id="layer-preview" class="preview-list"></div>
+                    </div>
+                </div>
+
+                <div class="upload-actions">
+                    <button class="btn btn-primary btn-large" id="generate-btn" disabled>
+                        <i class="fas fa-magic"></i>
+                        Generate 3D Tour
+                    </button>
+                    <button class="btn btn-secondary" onclick="debugData()" style="margin-left: 10px;">
+                        <i class="fas fa-bug"></i>
+                        Debug Data
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Editor Section -->
+        <section id="editor-section" class="section">
+            <div class="editor-layout">
+                <!-- Sidebar -->
+                <aside class="editor-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Tour Nodes</h3>
+                        <button class="btn-icon" onclick="addNode()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="nodes-list" class="nodes-list"></div>
+                </aside>
+
+                <!-- Main Editor -->
+                <main class="editor-main">
+                    <div class="editor-toolbar">
+                        <div class="toolbar-left">
+                            <button class="btn-icon" onclick="backToUpload()">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <span class="node-title" id="current-node-title">Select a node</span>
+                        </div>
+                        <div class="toolbar-center">
+                            <div class="editor-tools">
+                                <button class="tool-btn active" id="select-tool" title="Select Tool">
+                                    <i class="fas fa-mouse-pointer"></i>
+                                </button>
+                                <button class="tool-btn" id="hotspot-tool" title="Add Hotspot">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                                <button class="tool-btn" id="measurement-tool" title="Measurement Calibration">
+                                    <i class="fas fa-ruler"></i>
+                                </button>
+                                <button class="tool-btn" id="floorplan-tool" title="Floor Plan Mapping">
+                                    <i class="fas fa-map-pin"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-secondary" onclick="previewTour()">
+                                <i class="fas fa-play"></i> Preview 3D Tour
+                            </button>
+                            <button class="btn btn-primary" onclick="saveTour()">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Floor Plan Mapper -->
+                    <div id="floorplan-mapper" class="floorplan-mapper" style="display: none;">
+                        <div class="mapper-header">
+                            <h3>Floor Plan Coordinate Mapping</h3>
+                            <button class="btn-icon" onclick="closeFloorPlanMapper()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="mapper-instructions">
+                            <i class="fas fa-info-circle"></i>
+                            Click on the floor plan where each panorama was taken. This creates the "you are here" navigation.
+                        </div>
+                        <div class="mapper-container">
+                            <canvas id="floorplan-canvas"></canvas>
+                            <div class="mapper-controls">
+                                <button class="btn btn-secondary" onclick="clearFloorPlanPoints()">
+                                    <i class="fas fa-trash"></i> Clear Points
+                                </button>
+                                <button class="btn btn-primary" onclick="saveFloorPlanMapping()">
+                                    <i class="fas fa-save"></i> Save Mapping
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="editor-content">
+                        <div class="panorama-preview" id="pano-editor-preview">
+                            <!-- Visual Layer Editor will be inserted here -->
+                            <div class="preview-overlay">
+                                <p>Select a node to edit</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panels">
+                            <!-- Node Settings -->
+                            <div class="panel">
+                                <h4>Node Settings</h4>
+                                <div class="form-group">
+                                    <label>Label</label>
+                                    <input type="text" id="node-label" class="form-control" placeholder="e.g., Living Room">
+                                </div>
+                                <div class="form-group">
+                                    <label>Next Node</label>
+                                    <select id="node-next" class="form-control">
+                                        <option value="">End of tour</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Rotation Limits</label>
+                                    <div class="range-group">
+                                        <input type="range" id="rotation-h" min="10" max="180" value="30">
+                                        <span id="rotation-h-val">±30°</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </section>
+
+        <!-- Viewer Section - CLEAN 3D TOUR ENGINE -->
+        <section id="viewer-section" class="section">
+            <div class="viewer-container">
+                <div class="viewer-header" style="position: fixed; top: 20px; left: 20px; right: 20px; z-index: 1001; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.7); padding: 15px 20px; border-radius: 8px;">
+                    <button class="btn-icon" onclick="exitViewer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="viewer-info">
+                        <h3 id="viewer-node-label">Loading...</h3>
+                        <p id="viewer-distance">Interactive 3D Tour</p>
+                    </div>
+                    <div class="viewer-actions">
+                        <button class="btn-icon fullscreen-btn" onclick="toggleFullscreen()" title="Enter fullscreen (F)">
+                            <i class="fas fa-expand icon-expand"></i>
+                            <i class="fas fa-compress icon-compress"></i>
+                        </button>
+                        <button class="btn-icon" onclick="shareTour()">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="viewer-container" class="viewer-canvas" style="width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; background: #000; z-index: 1000;">
+                    <!-- The LOFT³ Tour Engine will render here -->
+                </div>
+
+                <div class="viewer-controls" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1001; display: flex; align-items: center; gap: 20px; background: rgba(0,0,0,0.7); padding: 15px 25px; border-radius: 25px;">
+                    <button class="nav-btn" id="prev-node-btn" onclick="previousNode()" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="progress-dots" id="progress-dots"></div>
+                    <button class="nav-btn" id="next-node-btn" onclick="nextNode()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="viewer-ui">
+                    <button class="ui-toggle" onclick="toggleUI()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Hidden elements for compatibility -->
+            <div style="display: none;">
+                <span id="tour-loaded">No</span>
+                <span id="current-node">-</span>
+                <span id="node-index">-</span>
+                <span id="total-nodes">-</span>
+                <span id="fps">-</span>
+                <span id="transitioning">No</span>
+                <button id="jump-first-btn"></button>
+                <button id="jump-middle-btn"></button>
+                <button id="jump-last-btn"></button>
+                <div id="message-area"></div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="meta-template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Metadata Template</h3>
+                <button class="btn-icon" onclick="closeModal('meta-template-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Create a JSON file with this structure:</p>
+                <pre><code>{
+  "nodes": [
+    {
+      "id": "gate",
+      "image": "gate.jpg",
+      "label": "Main Gate",
+      "next": "entrance",
+      "layers": [
+        {
+          "image": "car.png",
+          "x": 0.3,
+          "y": 0.5,
+          "scale": 1.0,
+          "parallaxFactor": 0.5
+        }
+      ]
+    },
+    {
+      "id": "entrance",
+      "image": "entrance.jpg",
+      "label": "Entrance Hall",
+      "next": "living"
+    }
+  ]
+}</code></pre>
+                <button class="btn btn-primary" onclick="downloadTemplate()">
+                    <i class="fas fa-download"></i> Download Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">Processing...</p>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Three.js for parallax layers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Marzipano for panorama rendering (Local) -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Tour Engine Components (minimal for performance) -->
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    
+    <!-- Additional LOFT³ Components -->
+    <script src="js/loft-tour-metadata-parser.js"></script>
+    <script src="js/loft-tour-visual-editor.js"></script>
+    <script src="js/loft-tour-editor.js"></script>
+
+    <script>
+        // Global variables for the working tour engine
+        let engine = null;
+        let tourLoaded = false;
+        
+        // Simple connection to the existing editor system
+        let loftTourEditor = null;
+        
+        // UI elements for tour navigation
+        const loadTourBtn = document.getElementById('generate-btn');
+        const prevNodeBtn = document.getElementById('prev-node-btn');
+        const nextNodeBtn = document.getElementById('next-node-btn');
+        const jumpFirstBtn = document.getElementById('jump-first-btn');
+        const jumpMiddleBtn = document.getElementById('jump-middle-btn');
+        const jumpLastBtn = document.getElementById('jump-last-btn');
+        const messageArea = document.getElementById('message-area');
+        
+        // Status elements
+        const tourLoadedEl = document.getElementById('tour-loaded');
+        const currentNodeEl = document.getElementById('current-node');
+        const nodeIndexEl = document.getElementById('node-index');
+        const totalNodesEl = document.getElementById('total-nodes');
+        const fpsEl = document.getElementById('fps');
+        const transitioningEl = document.getElementById('transitioning');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent multiple initializations
+            if (window.loftEditorInitialized) {
+                console.log('Editor already initialized, skipping...');
+                return;
+            }
+            window.loftEditorInitialized = true;
+            
+            console.log('🚀 LOFT Enhanced Tour Generator initialized');
+            
+            // Initialize enhanced upload functionality
+            initEnhancedUpload();
+            
+            // Initialize enhanced editor tools
+            initEditorTools();
+            
+            // Initialize the editor system properly
+            initializeEditor();
+            
+            // Set default measurement values
+            document.getElementById('ceiling-height').value = '9.5';
+            document.getElementById('reference-length').value = '12.0';
+            measurementData.ceilingHeight = 9.5;
+            measurementData.referenceLength = 12.0;
+            
+            // Wait for the editor to initialize
+            setTimeout(() => {
+                if (window.loftTourEditor) {
+                    loftTourEditor = window.loftTourEditor;
+                    console.log('Connected to LOFT Tour Editor');
+                    
+                    // Override the generate button to use the working tour engine
+                    const generateBtn = document.getElementById('generate-btn');
+                    if (generateBtn) {
+                        generateBtn.addEventListener('click', () => {
+                            if (loftTourEditor) {
+                                // Generate tour data and go to editor (NOT preview)
+                                loftTourEditor.generateTour();
+                                // Go to editor section instead of preview
+                                setTimeout(() => {
+                                    showSection('editor-section');
+                                }, 500);
+                            }
+                        });
+                    }
+                    
+                    // Monitor editor state to update generate button
+                    setInterval(() => {
+                        updateGenerateButton();
+                    }, 1000);
+                } else {
+                    // Fallback initialization if loftTourEditor is not available
+                    console.log('Using fallback editor initialization');
+                    initializeFallbackEditor();
+                }
+            }, 1000);
+            
+            // Setup navigation event listeners
+            setupNavigationListeners();
+        });
+        
+        function setupNavigationListeners() {
+            // Navigation event listeners
+            if (prevNodeBtn) prevNodeBtn.addEventListener('click', previousNode);
+            if (nextNodeBtn) nextNodeBtn.addEventListener('click', nextNode);
+            if (jumpFirstBtn) jumpFirstBtn.addEventListener('click', () => jumpToNode(0));
+            if (jumpMiddleBtn) jumpMiddleBtn.addEventListener('click', () => {
+                if (engine && engine.tourData && engine.tourData.nodes) {
+                    jumpToNode(Math.floor(engine.tourData.nodes.length / 2));
+                }
+            });
+            if (jumpLastBtn) jumpLastBtn.addEventListener('click', () => {
+                if (engine && engine.tourData && engine.tourData.nodes) {
+                    jumpToNode(engine.tourData.nodes.length - 1);
+                }
+            });
+            
+            // Update status periodically
+            setInterval(updateStatus, 100);
+        }
+        
+        // Initialize engine with proper async handling
+        async function initEngine() {
+            try {
+                const container = document.getElementById('viewer-container');
+                if (!container) {
+                    throw new Error('Viewer container not found');
+                }
+                
+                engine = new LoftTourEngine(container);
+                
+                // Wait for engine initialization to complete
+                // The engine calls init() in constructor but doesn't await it
+                // So we need to wait for the key components to be ready
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max
+                
+                while (attempts < maxAttempts) {
+                    if (engine.marzipanoViewer && engine.layerManager && engine.transitionManager) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Engine initialization timeout - components not ready');
+                }
+                
+                // Setup node change callback
+                engine.onNodeChange = (node, index) => {
+                    updateStatus();
+                    showMessage(`Switched to: ${node.label || node.id}`, 'success');
+                };
+                
+                showMessage('3D Tour Engine ready', 'success');
+                return true;
+            } catch (error) {
+                showMessage(`Failed to initialize 3D engine: ${error.message}`, 'error');
+                console.error(error);
+                return false;
+            }
+        }
+        
+        // Load tour with the working 3D engine
+        async function loadTourWith3DEngine(tourData) {
+            if (!engine) {
+                const initSuccess = await initEngine();
+                if (!initSuccess) return false;
+            }
+            
+            try {
+                await engine.loadTour(tourData);
+                
+                tourLoaded = true;
+                updateStatus();
+                enableNavigationButtons();
+                
+                showMessage('3D Tour loaded! Use mouse to look around, arrows to navigate.', 'success');
+                return true;
+                
+            } catch (error) {
+                showMessage(`Failed to load 3D tour: ${error.message}`, 'error');
+                console.error(error);
+                return false;
+            }
+        }
+        
+        // Navigation functions for the working 3D tour
+        async function previousNode() {
+            if (!engine || !tourLoaded) return;
+            
+            try {
+                await engine.previousNode();
+                updateStatus();
+            } catch (error) {
+                showMessage(`Navigation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function nextNode() {
+            if (!engine || !tourLoaded) return;
+            
+            try {
+                await engine.nextNode();
+                updateStatus();
+            } catch (error) {
+                showMessage(`Navigation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function jumpToNode(index) {
+            if (!engine || !tourLoaded || !engine.tourData || !engine.tourData.nodes) return;
+            
+            try {
+                const node = engine.tourData.nodes[index];
+                if (node) {
+                    await engine.transitionTo(node, index);
+                    updateStatus();
+                }
+            } catch (error) {
+                showMessage(`Jump error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update status display
+        function updateStatus() {
+            if (!engine) return;
+            
+            if (tourLoadedEl) tourLoadedEl.textContent = tourLoaded ? 'Yes' : 'No';
+            
+            if (tourLoaded && engine.currentNode) {
+                if (currentNodeEl) currentNodeEl.textContent = engine.currentNode.label || engine.currentNode.id;
+                if (nodeIndexEl) nodeIndexEl.textContent = `${engine.currentNodeIndex + 1}`;
+                if (totalNodesEl) totalNodesEl.textContent = engine.tourData ? engine.tourData.nodes.length : 0;
+                if (transitioningEl) transitioningEl.textContent = engine.isTransitioning ? 'Yes' : 'No';
+                
+                // Update button states
+                if (prevNodeBtn) {
+                    prevNodeBtn.disabled = engine.currentNodeIndex === 0 || engine.isTransitioning;
+                    prevNodeBtn.style.opacity = prevNodeBtn.disabled ? '0.5' : '1';
+                }
+                if (nextNodeBtn) {
+                    const maxIndex = engine.tourData ? engine.tourData.nodes.length - 1 : 0;
+                    nextNodeBtn.disabled = engine.currentNodeIndex === maxIndex || engine.isTransitioning;
+                    nextNodeBtn.style.opacity = nextNodeBtn.disabled ? '0.5' : '1';
+                }
+            }
+            
+            if (fpsEl) fpsEl.textContent = engine.fps || '-';
+        }
+        
+        // Enable navigation buttons
+        function enableNavigationButtons() {
+            if (prevNodeBtn) prevNodeBtn.disabled = false;
+            if (nextNodeBtn) nextNodeBtn.disabled = false;
+            if (jumpFirstBtn) jumpFirstBtn.disabled = false;
+            if (jumpMiddleBtn) jumpMiddleBtn.disabled = false;
+            if (jumpLastBtn) jumpLastBtn.disabled = false;
+        }
+        
+        // Show message (simplified)
+        function showMessage(text, type = 'info') {
+            // Silent operation - no debug messages in production
+            console.log(`${type.toUpperCase()}: ${text}`);
+        }
+        
+        function initializeEditor() {
+            // Ensure all required scripts are loaded
+            if (typeof window.LoftTourEditor !== 'undefined') {
+                // Prevent multiple initializations
+                if (window.loftTourEditor) {
+                    console.log('LoftTourEditor already exists, skipping initialization');
+                    return;
+                }
+                
+                // Initialize the main editor
+                window.loftTourEditor = new LoftTourEditor();
+                console.log('LoftTourEditor initialized');
+            }
+        }
+        
+        function initializeFallbackEditor() {
+            // Create a minimal editor interface if the main one fails
+            console.log('Initializing fallback editor interface');
+            
+            // Initialize visual editor if container exists
+            const editorContainer = document.getElementById('pano-editor-preview');
+            if (editorContainer && typeof VisualLayerEditor !== 'undefined') {
+                window.visualEditor = new VisualLayerEditor(editorContainer, null);
+                console.log('Visual editor initialized as fallback');
+            }
+        }
+        
+        function updateGenerateButton() {
+            const btn = document.getElementById('generate-btn');
+            if (!btn || !loftTourEditor) return;
+            
+            const hasImages = loftTourEditor.uploadedPanoramas && loftTourEditor.uploadedPanoramas.length > 0;
+            const hasPropertyInfo = propertyFormData.name && propertyFormData.location && propertyFormData.rooms.length > 0;
+            const hasMeasurements = measurementData.ceilingHeight || measurementData.referenceLength;
+            
+            btn.disabled = !(hasImages && hasPropertyInfo);
+            
+            if (hasImages && hasPropertyInfo) {
+                if (hasMeasurements) {
+                    btn.innerHTML = '<i class="fas fa-magic"></i> Generate Advanced 3D Tour';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-magic"></i> Generate 3D Tour';
+                }
+            } else if (hasImages && !hasPropertyInfo) {
+                btn.innerHTML = '<i class="fas fa-home"></i> Complete Property Info First';
+            } else if (!hasImages && hasPropertyInfo) {
+                btn.innerHTML = '<i class="fas fa-images"></i> Upload Images First';
+            } else {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Generate 3D Tour';
+            }
+        }
+        
+        // Enhanced tour data creation with form data
+        function createEnhancedTourData() {
+            const editor = window.loftEditor || window.loftTourEditor;
+            
+            if (editor && editor.uploadedPanoramas && propertyFormData.name) {
+                const enhancedTourData = {
+                    tourName: `${propertyFormData.name} Virtual Tour`,
+                    property: {
+                        name: propertyFormData.name,
+                        location: propertyFormData.location,
+                        totalArea: `${propertyFormData.totalArea} sq ft`,
+                        bedrooms: propertyFormData.bedrooms,
+                        bathrooms: propertyFormData.bathrooms,
+                        yearBuilt: propertyFormData.yearBuilt,
+                        description: propertyFormData.description
+                    },
+                    measurementData: {
+                        ceilingHeight: measurementData.ceilingHeight || 9.5,
+                        referenceLength: measurementData.referenceLength || 12.0,
+                        unit: 'ft'
+                    },
+                    floorPlan: floorPlanData.imageUrl ? {
+                        imageUrl: floorPlanData.imageUrl,
+                        scenePositions: floorPlanData.scenePositions,
+                        scale: 1.0
+                    } : null,
+                    scenes: editor.uploadedPanoramas.map((file, index) => {
+                        const roomData = propertyFormData.rooms[index] || {
+                            name: `Room ${index + 1}`,
+                            type: 'Other',
+                            description: 'Beautiful space'
+                        };
+                        
+                        return {
+                            id: index,
+                            title: roomData.name,
+                            subtitle: roomData.description,
+                            roomType: roomData.type,
+                            imageUrl: file.url || URL.createObjectURL(file),
+                            ceilingHeight: measurementData.ceilingHeight || 9.5,
+                            dimensions: { 
+                                width: "12'", 
+                                length: "15'", 
+                                height: `${measurementData.ceilingHeight || 9.5}'` 
+                            },
+                            features: [
+                                "Premium finishes",
+                                "Natural lighting", 
+                                "Modern amenities"
+                            ],
+                            floorPlanPosition: floorPlanData.scenePositions[`scene_${index}`] || { x: 100 + index * 50, y: 100 },
+                            distanceFromEntrance: index * 12,
+                            hotspots: [
+                                {
+                                    x: 0.6,
+                                    y: 0.4,
+                                    info: `${roomData.name} feature highlight`
+                                }
+                            ]
+                        };
+                    })
+                };
+                
+                console.log('Generated enhanced tour data:', enhancedTourData);
+                return enhancedTourData;
+            }
+            
+            return null;
+        }
+        
+        // Enhanced upload functionality
+        let measurementData = {
+            ceilingHeight: null,
+            referenceLength: null
+        };
+        
+        let floorPlanData = {
+            image: null,
+            imageUrl: null,
+            scenePositions: {}
+        };
+        
+        let propertyFormData = {
+            name: '',
+            location: '',
+            totalArea: '',
+            yearBuilt: '',
+            bedrooms: '',
+            bathrooms: '',
+            description: '',
+            rooms: []
+        };
+        
+        // Initialize enhanced upload handlers
+        function initEnhancedUpload() {
+            // Measurement inputs
+            document.getElementById('ceiling-height').addEventListener('input', function(e) {
+                measurementData.ceilingHeight = parseFloat(e.target.value) || null;
+                updateGenerateButton();
+            });
+            
+            document.getElementById('reference-length').addEventListener('input', function(e) {
+                measurementData.referenceLength = parseFloat(e.target.value) || null;
+                updateGenerateButton();
+            });
+            
+            // Property form inputs
+            initPropertyFormHandlers();
+            
+            // Floor plan upload
+            const floorplanDropZone = document.getElementById('floorplan-drop-zone');
+            const floorplanInput = document.getElementById('floorplan-input');
+            
+            floorplanDropZone.addEventListener('click', () => floorplanInput.click());
+            floorplanInput.addEventListener('change', handleFloorPlanUpload);
+            
+            // Drag and drop for floor plan
+            floorplanDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                floorplanDropZone.classList.add('drag-over');
+            });
+            
+            floorplanDropZone.addEventListener('dragleave', () => {
+                floorplanDropZone.classList.remove('drag-over');
+            });
+            
+            floorplanDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                floorplanDropZone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFloorPlanFile(files[0]);
+                }
+            });
+        }
+        
+        function initPropertyFormHandlers() {
+            // Property basic info
+            const propertyInputs = [
+                'property-name-input',
+                'property-location-input', 
+                'total-area-input',
+                'year-built-input',
+                'bedrooms-input',
+                'bathrooms-input',
+                'property-description'
+            ];
+            
+            propertyInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('input', updatePropertyFormData);
+                }
+            });
+            
+            // Initialize with default values
+            updatePropertyFormData();
+        }
+        
+        function updatePropertyFormData() {
+            propertyFormData = {
+                name: document.getElementById('property-name-input').value || 'Luxury Property',
+                location: document.getElementById('property-location-input').value || 'Premium Location',
+                totalArea: document.getElementById('total-area-input').value || '2400',
+                yearBuilt: parseInt(document.getElementById('year-built-input').value) || 2023,
+                bedrooms: parseInt(document.getElementById('bedrooms-input').value) || 3,
+                bathrooms: parseFloat(document.getElementById('bathrooms-input').value) || 2,
+                description: document.getElementById('property-description').value || 'Premium luxury property',
+                rooms: collectRoomData()
+            };
+            
+            updateGenerateButton();
+            updateMetadataStatus();
+        }
+        
+        function collectRoomData() {
+            const rooms = [];
+            const roomEntries = document.querySelectorAll('.room-entry');
+            
+            roomEntries.forEach((entry, index) => {
+                const name = entry.querySelector('.room-name').value || `Room ${index + 1}`;
+                const type = entry.querySelector('.room-type').value || 'Other';
+                const description = entry.querySelector('.room-description').value || 'Beautiful space';
+                
+                rooms.push({
+                    id: index,
+                    name: name,
+                    type: type,
+                    description: description
+                });
+            });
+            
+            return rooms;
+        }
+        
+        function addRoom() {
+            const container = document.getElementById('rooms-container');
+            const roomCount = container.children.length + 1;
+            
+            const roomEntry = document.createElement('div');
+            roomEntry.className = 'room-entry';
+            roomEntry.innerHTML = `
+                <div class="room-header">
+                    <span class="room-number">Room ${roomCount}</span>
+                    <button type="button" class="btn-remove-room" onclick="removeRoom(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="room-fields">
+                    <div class="input-group">
+                        <label>Room Name</label>
+                        <input type="text" class="room-name" placeholder="e.g., Living Room" onchange="updatePropertyFormData()">
+                    </div>
+                    <div class="input-group">
+                        <label>Room Type</label>
+                        <select class="room-type" onchange="updatePropertyFormData()">
+                            <option value="Living Room">Living Room</option>
+                            <option value="Kitchen">Kitchen</option>
+                            <option value="Bedroom">Bedroom</option>
+                            <option value="Bathroom">Bathroom</option>
+                            <option value="Dining Room">Dining Room</option>
+                            <option value="Office">Office</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Description</label>
+                        <input type="text" class="room-description" placeholder="e.g., Spacious room with natural light" onchange="updatePropertyFormData()">
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(roomEntry);
+            updatePropertyFormData();
+        }
+        
+        function removeRoom(button) {
+            const roomEntry = button.closest('.room-entry');
+            roomEntry.remove();
+            
+            // Update room numbers
+            const roomEntries = document.querySelectorAll('.room-entry');
+            roomEntries.forEach((entry, index) => {
+                entry.querySelector('.room-number').textContent = `Room ${index + 1}`;
+            });
+            
+            updatePropertyFormData();
+        }
+        
+        function updateMetadataStatus() {
+            const status = document.getElementById('metadata-status');
+            const hasBasicInfo = propertyFormData.name && propertyFormData.location;
+            const hasRooms = propertyFormData.rooms.length > 0;
+            
+            if (hasBasicInfo && hasRooms) {
+                status.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>Property information complete (${propertyFormData.rooms.length} rooms)</span>
+                `;
+                status.style.color = '#28a745';
+            } else {
+                status.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Please complete property information</span>
+                `;
+                status.style.color = '#ffc107';
+            }
+        }
+        
+        function handleFloorPlanUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFloorPlanFile(file);
+            }
+        }
+        
+        function handleFloorPlanFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file for the floor plan.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                floorPlanData.image = file;
+                floorPlanData.imageUrl = e.target.result;
+                
+                // Show preview
+                const preview = document.getElementById('floorplan-preview');
+                preview.innerHTML = `
+                    <img src="${e.target.result}" alt="Floor Plan Preview">
+                    <div class="floorplan-info">
+                        <strong>${file.name}</strong> (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
+                `;
+                
+                updateGenerateButton();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Enhanced editor tools
+        let currentTool = 'select';
+        let floorPlanMapperActive = false;
+        
+        function initEditorTools() {
+            // Tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const toolId = this.id;
+                    selectTool(toolId);
+                });
+            });
+        }
+        
+        function selectTool(toolId) {
+            // Update active tool
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(toolId).classList.add('active');
+            
+            currentTool = toolId.replace('-tool', '');
+            
+            // Handle specific tools
+            switch(currentTool) {
+                case 'floorplan':
+                    openFloorPlanMapper();
+                    break;
+                case 'measurement':
+                    showMeasurementCalibration();
+                    break;
+                case 'hotspot':
+                    enableHotspotMode();
+                    break;
+            }
+        }
+        
+        function openFloorPlanMapper() {
+            if (!floorPlanData.imageUrl) {
+                alert('Please upload a floor plan first in the Upload section.');
+                return;
+            }
+            
+            const mapper = document.getElementById('floorplan-mapper');
+            mapper.style.display = 'flex';
+            floorPlanMapperActive = true;
+            
+            // Setup canvas
+            const canvas = document.getElementById('floorplan-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            img.onload = function() {
+                // Set canvas size to match image aspect ratio
+                const maxWidth = 800;
+                const maxHeight = 600;
+                const aspectRatio = img.width / img.height;
+                
+                if (aspectRatio > maxWidth / maxHeight) {
+                    canvas.width = maxWidth;
+                    canvas.height = maxWidth / aspectRatio;
+                } else {
+                    canvas.height = maxHeight;
+                    canvas.width = maxHeight * aspectRatio;
+                }
+                
+                // Draw floor plan
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Draw existing points
+                drawFloorPlanPoints(ctx);
+            };
+            img.src = floorPlanData.imageUrl;
+            
+            // Add click handler
+            canvas.onclick = handleFloorPlanClick;
+        }
+        
+        function handleFloorPlanClick(e) {
+            const canvas = e.target;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            
+            // Get current scene count
+            const sceneCount = Object.keys(floorPlanData.scenePositions).length;
+            const sceneId = `scene_${sceneCount}`;
+            
+            // Store position
+            floorPlanData.scenePositions[sceneId] = { x, y };
+            
+            // Redraw canvas
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                drawFloorPlanPoints(ctx);
+            };
+            img.src = floorPlanData.imageUrl;
+        }
+        
+        function drawFloorPlanPoints(ctx) {
+            Object.entries(floorPlanData.scenePositions).forEach(([sceneId, pos], index) => {
+                // Draw point
+                ctx.fillStyle = '#d4af37';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw number
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(index + 1, pos.x, pos.y + 4);
+            });
+        }
+        
+        function closeFloorPlanMapper() {
+            document.getElementById('floorplan-mapper').style.display = 'none';
+            floorPlanMapperActive = false;
+            selectTool('select-tool');
+        }
+        
+        function clearFloorPlanPoints() {
+            floorPlanData.scenePositions = {};
+            const canvas = document.getElementById('floorplan-canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = floorPlanData.imageUrl;
+        }
+        
+        function saveFloorPlanMapping() {
+            console.log('Floor plan mapping saved:', floorPlanData.scenePositions);
+            closeFloorPlanMapper();
+            alert('Floor plan mapping saved successfully!');
+        }
+        
+        function showMeasurementCalibration() {
+            alert('Measurement calibration: Use the ceiling height and reference length from the upload section to enable accurate measurements in the tour.');
+        }
+        
+        function enableHotspotMode() {
+            alert('Hotspot mode: Click on the panorama preview to add information hotspots.');
+        }
+            console.log('=== DEBUG DATA ===');
+            
+            const editor = window.loftEditor || window.loftTourEditor || loftTourEditor;
+            
+            if (editor) {
+                console.log('Editor found:', true);
+                console.log('Editor type:', editor.constructor.name);
+                console.log('Uploaded panoramas:', editor.uploadedPanoramas ? editor.uploadedPanoramas.length : 'N/A');
+                console.log('Tour metadata:', editor.tourMetadata ? 'Available' : 'None');
+                console.log('Current tour:', editor.currentTour ? 'Available' : 'None');
+                console.log('Current tour nodes:', editor.currentTour ? editor.currentTour.nodes.length : 'N/A');
+                
+                // Show detailed node information
+                if (editor.currentTour && editor.currentTour.nodes) {
+                    console.log('=== NODE DETAILS ===');
+                    editor.currentTour.nodes.forEach((node, index) => {
+                        console.log(`Node ${index}:`, {
+                            id: node.id,
+                            label: node.label,
+                            imageUrl: node.imageUrl ? 'Available' : 'Missing',
+                            imageUrlLength: node.imageUrl ? node.imageUrl.length : 0,
+                            imageUrlPreview: node.imageUrl ? node.imageUrl.substring(0, 50) + '...' : 'N/A'
+                        });
+                    });
+                }
+                
+                // Check 3D engine availability
+                console.log('LoftTourEngine available:', typeof LoftTourEngine !== 'undefined');
+                console.log('3D engine instance:', engine ? 'Available' : 'None');
+                
+            } else {
+                console.log('Editor not found');
+                console.log('window.loftEditor:', typeof window.loftEditor);
+                console.log('window.loftTourEditor:', typeof window.loftTourEditor);
+                console.log('loftTourEditor:', typeof loftTourEditor);
+            }
+            console.log('==================');
+        }
+        
+        // Enhanced preview function
+        function previewTour() {
+            console.log('Preview tour called - launching enhanced 3D engine');
+            
+            // Ensure only viewer section is active
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('viewer-section').classList.add('active');
+            
+            // Create enhanced tour data
+            const tourData = createEnhancedTourData();
+            
+            if (tourData) {
+                console.log('Enhanced tour data created:', tourData);
+                
+                // Store enhanced data globally for viewer
+                window.enhancedTourData = tourData;
+                
+                // Launch enhanced 3D viewer
+                loadEnhancedTourViewer(tourData);
+                
+            } else {
+                console.error('No enhanced tour data available');
+                alert('Please upload panoramas and metadata first.');
+                return;
+            }
+        }
+        
+        function loadEnhancedTourViewer(tourData) {
+            // This will be handled by the enhanced viewer.html
+            console.log('Loading enhanced tour viewer with data:', tourData);
+            
+            // The viewer will access window.enhancedTourData
+            if (typeof window.initEnhancedViewer === 'function') {
+                window.initEnhancedViewer(tourData);
+            } else {
+                console.log('Enhanced viewer will initialize on load');
+            }
+        }
+        
+        function createTourDataFromCurrentState() {
+            // Try to create tour data from current visual editor state
+            if (window.visualEditor && window.visualEditor.layers && window.visualEditor.layers.length > 0) {
+                return {
+                    tourName: 'Visual Editor Tour',
+                    nodes: [{
+                        id: 'node_1',
+                        label: 'Edited Node',
+                        image: 'uploads/loft-tours/panoramas/test-panorama.jpg', // Use test image
+                        initialYaw: 0,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: window.visualEditor.layers
+                    }]
+                };
+            }
+            
+            // Check if there's any uploaded data we can use
+            if (window.loftTourEditor && window.loftTourEditor.uploadedPanoramas) {
+                return {
+                    tourName: 'Generated Tour',
+                    nodes: window.loftTourEditor.uploadedPanoramas.map((file, index) => ({
+                        id: `node_${index + 1}`,
+                        label: file.name || `Node ${index + 1}`,
+                        image: file.url || URL.createObjectURL(file),
+                        initialYaw: index * 1.57, // Different starting angles
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    }))
+                };
+            }
+            
+            // Fallback: create a demo tour with test panorama
+            return {
+                tourName: "Demo 3D Tour",
+                nodes: [
+                    {
+                        id: "demo1",
+                        label: "Demo Panorama 1",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 0,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    },
+                    {
+                        id: "demo2",
+                        label: "Demo Panorama 2",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 1.57,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    },
+                    {
+                        id: "demo3",
+                        label: "Demo Panorama 3",
+                        image: "uploads/loft-tours/panoramas/test-panorama.jpg",
+                        initialYaw: 3.14,
+                        initialPitch: 0,
+                        initialFov: 120,
+                        rotationLimits: { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: []
+                    }
+                ]
+            };
+        }
+        
+        function saveTour() {
+            const editor = window.loftEditor || window.loftTourEditor || loftTourEditor;
+            
+            if (!editor || !editor.currentTour) {
+                // Try to get tour data from visual editor or create basic tour data
+                const tourData = createTourDataFromCurrentState();
+                if (!tourData) {
+                    alert('No tour data to save. Please generate a tour first.');
+                    return;
+                }
+                
+                saveTourData(tourData);
+                return;
+            }
+            
+            saveTourData(editor.currentTour);
+        }
+        
+        function saveTourData(tourData) {
+            try {
+                // Create downloadable tour data
+                const saveData = {
+                    name: tourData.tourName || tourData.name || 'Generated Tour',
+                    created: new Date().toISOString(),
+                    nodes: tourData.nodes.map(node => ({
+                        id: node.id,
+                        label: node.label,
+                        image: node.image || node.imageUrl,
+                        nextNode: node.nextNode,
+                        initialYaw: node.initialYaw || 0,
+                        initialPitch: node.initialPitch || 0,
+                        initialFov: node.initialFov || 120,
+                        rotationLimits: node.rotationLimits || { h: 180, v: 90, maxFov: 120, minFov: 50 },
+                        layers: node.layers || []
+                    }))
+                };
+                
+                // Create and download JSON file
+                const blob = new Blob([JSON.stringify(saveData, null, 2)], { 
+                    type: 'application/json' 
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${saveData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tour.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                // Show success message
+                showSaveSuccessNotification();
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save tour: ' + error.message);
+            }
+        }
+        
+        function showSaveSuccessNotification() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+                border-radius: 6px;
+                padding: 12px 16px;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-family: 'Inter', sans-serif;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                Tour saved successfully!
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function backToUpload() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('upload-section').classList.add('active');
+        }
+        
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+        
+        function exitViewer() {
+            // Stop the 3D engine when exiting
+            if (engine) {
+                tourLoaded = false;
+                // Reset status
+                updateStatus();
+            }
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('editor-section').classList.add('active');
+        }
+        
+        function showMetaTemplate() {
+            document.getElementById('meta-template-modal').style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function downloadTemplate() {
+            const template = {
+                "nodes": [
+                    {
+                        "id": "entrance",
+                        "image": "entrance.jpg",
+                        "label": "Main Entrance",
+                        "next": "living_room"
+                    },
+                    {
+                        "id": "living_room",
+                        "image": "living.jpg", 
+                        "label": "Living Room",
+                        "next": "kitchen"
+                    },
+                    {
+                        "id": "kitchen",
+                        "image": "kitchen.jpg",
+                        "label": "Kitchen", 
+                        "next": null
+                    }
+                ]
+            };
+            
+            const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tour-metadata-template.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeModal('meta-template-modal');
+        }
+        
+        // Placeholder functions for compatibility
+        function addNode() { 
+            alert('Add node functionality coming soon'); 
+        }
+        
+        function toggleFullscreen() { 
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        }
+        
+        function shareTour() { 
+            alert('Share functionality coming soon'); 
+        }
+        
+        function toggleUI() { 
+            alert('UI toggle functionality coming soon'); 
+        }
+    </script>
+</body>
+</html>

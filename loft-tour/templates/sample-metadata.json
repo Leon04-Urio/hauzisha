@@ -1,0 +1,125 @@
+{
+  "$schema": "https://loft-tour.schema.json",
+  "version": "1.0",
+  "tourName": "Sample Property Tour",
+  "description": "A beautiful walkthrough of a sample property showcasing all available features",
+  "metadata": {
+    "created": "2024-01-17",
+    "author": "LOFT³ System",
+    "propertyType": "residential",
+    "totalNodes": 3,
+    "estimatedDuration": "2-3 minutes"
+  },
+  "settings": {
+    "autoAdvance": false,
+    "showProgress": true,
+    "enableGyroscope": true,
+    "defaultTransitionDuration": 1200
+  },
+  "nodes": [
+    {
+      "id": "entrance",
+      "label": "Main Entrance",
+      "description": "Welcome to this beautiful property. The main entrance showcases elegant design.",
+      "image": "entrance.jpg",
+      "nextNode": "living_room",
+      "rotationLimits": { 
+        "h": 30, 
+        "v": 10,
+        "comment": "Horizontal: ±30°, Vertical: ±10°"
+      },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 0,
+      "layers": [
+        {
+          "name": "welcome_sign",
+          "description": "Welcome sign with property information",
+          "image": "welcome_sign.png",
+          "position": { 
+            "x": 0.5, 
+            "y": 0.3,
+            "comment": "Center horizontally, upper third vertically (0-1 range)"
+          },
+          "parallaxFactor": 0.5,
+          "scale": 1.0,
+          "rotation": 0,
+          "opacity": 1.0,
+          "visible": true,
+          "depthOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "living_room",
+      "label": "Living Room",
+      "description": "Spacious living area with modern furnishings and natural light",
+      "image": "living_room.jpg",
+      "nextNode": "bedroom",
+      "rotationLimits": { "h": 45, "v": 15 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 1,
+      "layers": [
+        {
+          "name": "furniture_highlight",
+          "description": "Highlight modern furniture pieces",
+          "image": "furniture_highlight.png",
+          "position": { "x": 0.3, "y": 0.6 },
+          "parallaxFactor": 0.7,
+          "scale": 1.2,
+          "rotation": 0,
+          "opacity": 0.8,
+          "visible": true,
+          "depthOrder": 1
+        }
+      ]
+    },
+    {
+      "id": "bedroom",
+      "label": "Master Bedroom",
+      "description": "Comfortable master bedroom with ensuite bathroom access",
+      "image": "bedroom.jpg",
+      "nextNode": null,
+      "rotationLimits": { "h": 30, "v": 10 },
+      "initialYaw": 0,
+      "initialPitch": 0,
+      "nodeOrder": 2
+    }
+  ],
+  "validation": {
+    "requiredFields": ["id", "label", "image"],
+    "optionalFields": ["description", "nextNode", "rotationLimits", "initialYaw", "initialPitch", "layers"],
+    "layerRequiredFields": ["name", "image", "position"],
+    "layerOptionalFields": ["description", "parallaxFactor", "scale", "rotation", "opacity", "visible", "depthOrder"]
+  },
+  "documentation": {
+    "nodeFields": {
+      "id": "Unique identifier for the node (string, required)",
+      "label": "Display name for the node (string, required)",
+      "description": "Detailed description of the space (string, optional)",
+      "image": "Filename of the panorama image (string, required)",
+      "nextNode": "ID of the next node in sequence (string or null, optional)",
+      "rotationLimits": "Camera rotation constraints (object, optional)",
+      "initialYaw": "Starting horizontal rotation in degrees (number, optional, default: 0)",
+      "initialPitch": "Starting vertical rotation in degrees (number, optional, default: 0)",
+      "nodeOrder": "Display order for navigation (number, optional, default: 0)"
+    },
+    "layerFields": {
+      "name": "Unique name for the layer (string, required)",
+      "description": "Description of the layer content (string, optional)",
+      "image": "Filename of the layer PNG image (string, required)",
+      "position": "Layer position as {x, y} coordinates (object, required, 0-1 range)",
+      "parallaxFactor": "Parallax movement intensity (number, optional, 0-1 range, default: 0.5)",
+      "scale": "Layer scale factor (number, optional, 0.1-10 range, default: 1.0)",
+      "rotation": "Layer rotation in degrees (number, optional, default: 0)",
+      "opacity": "Layer transparency (number, optional, 0-1 range, default: 1.0)",
+      "visible": "Layer visibility (boolean, optional, default: true)",
+      "depthOrder": "Layer depth sorting (number, optional, default: 0)"
+    },
+    "rotationLimits": {
+      "h": "Horizontal rotation limit in degrees (number, 0-180, default: 30)",
+      "v": "Vertical rotation limit in degrees (number, 0-90, default: 10)"
+    }
+  }
+}

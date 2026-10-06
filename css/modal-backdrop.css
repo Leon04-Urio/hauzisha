@@ -1,0 +1,83 @@
+/* Frosted Glass Modal Backdrop Effect */
+
+/* Bootstrap modal backdrop override */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+.modal-backdrop.show {
+    opacity: 1 !important;
+}
+
+/* Custom modal overlays (for non-Bootstrap modals) */
+.booking-modal-overlay,
+.lightbox-overlay,
+.photo-tour-overlay {
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Auth modal specific styling */
+#authModal .modal-backdrop {
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Filter modal backdrop */
+#filterModal ~ .modal-backdrop {
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Exclude share bubble from frosted effect */
+#share-bubble {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure modals appear above the frosted backdrop */
+.modal {
+    z-index: 1050;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+/* Smooth transition for backdrop */
+.modal-backdrop {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Enhanced frosted glass for booking modal */
+.booking-modal-overlay {
+    animation: fadeInBackdrop 0.3s ease-in-out;
+}
+
+@keyframes fadeInBackdrop {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px) saturate(180%);
+        -webkit-backdrop-filter: blur(12px) saturate(180%);
+    }
+}
+
+/* Photo tour overlay frosted effect */
+.photo-tour-overlay.active {
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Lightbox overlay frosted effect */
+.lightbox-overlay {
+    backdrop-filter: blur(4px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}

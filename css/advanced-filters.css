@@ -1,0 +1,46 @@
+/* Advanced Filters Styling - Minimal overrides only */
+
+/* Filter Toggle Buttons - Better styling */
+.filter-toggle-btn,
+.filter-multi-btn {
+    border-radius: 20px;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.filter-toggle-btn.active,
+.filter-multi-btn.active {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+}
+
+/* Price and Size Presets - Better styling */
+.price-preset,
+.size-preset {
+    border-radius: 20px;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.price-preset.active,
+.size-preset.active {
+    background: #6c757d !important;
+    color: #fff !important;
+    border-color: #6c757d !important;
+}
+
+/* Filter Badge */
+.filter-badge {
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}

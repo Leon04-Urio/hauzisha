@@ -1,0 +1,24 @@
+/* NEW Label - Instagram Style */
+.new-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    z-index: 10;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Subtle animation on hover */
+.property-card:hover .new-label {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.3);
+}

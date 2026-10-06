@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT³ Virtual Tour - Embed</title>
+    
+    <!-- Prevent embedding in frames from other domains (security) -->
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' *;">
+    
+    <!-- Optimize for embedding -->
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    
+    <style>
+        /* Embed-specific styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .embed-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .embed-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 1000;
+        }
+        
+        .embed-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .embed-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 400px;
+        }
+        
+        .embed-error i {
+            font-size: 48px;
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+        
+        .embed-error h3 {
+            margin: 0 0 12px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .embed-error p {
+            margin: 0;
+            color: #d1d5db;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Hide UI elements for embed mode */
+        .embed-minimal .viewer-header,
+        .embed-minimal .viewer-controls {
+            display: none !important;
+        }
+        
+        .embed-minimal .viewer-canvas {
+            height: 100vh !important;
+        }
+        
+        /* Fullscreen button for embeds */
+        .embed-fullscreen-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1000;
+            transition: all 0.2s ease;
+        }
+        
+        .embed-fullscreen-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.05);
+        }
+        
+        /* Branding watermark */
+        .embed-branding {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .embed-branding:hover {
+            background: rgba(0, 0, 0, 0.9);
+            color: #d4af37;
+        }
+        
+        .embed-branding i {
+            margin-right: 6px;
+            color: #d4af37;
+        }
+    </style>
+</head>
+<body>
+    <div class="embed-container" id="embed-container">
+        <!-- Loading State -->
+        <div class="embed-loading" id="embed-loading">
+            <div class="spinner"></div>
+            <p>Loading virtual tour...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div class="embed-error" id="embed-error" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Tour Unavailable</h3>
+            <p>This virtual tour could not be loaded. It may have been removed or is temporarily unavailable.</p>
+        </div>
+        
+        <!-- Tour Viewer -->
+        <div class="viewer-container" id="viewer-container" style="display: none;">
+            <div class="viewer-canvas" id="viewer-canvas-container">
+                <canvas id="viewer-canvas"></canvas>
+            </div>
+            
+            <!-- Embed Controls -->
+            <button class="embed-fullscreen-btn" id="embed-fullscreen-btn" title="Enter fullscreen">
+                <i class="fas fa-expand"></i>
+            </button>
+            
+            <!-- Branding -->
+            <a href="/" class="embed-branding" target="_parent">
+                <i class="fas fa-cube"></i>
+                Powered by LOFT³
+            </a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Three.js for parallax layers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Marzipano for panorama rendering -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Tour Engine Components -->
+    <script src="js/loft-tour-mobile-optimization.js"></script>
+    <script src="js/loft-tour-progressive-loader.js"></script>
+    <script src="js/loft-tour-device-capabilities.js"></script>
+    <script src="js/loft-tour-performance-profiler.js"></script>
+    <script src="js/loft-tour-memory-optimizer.js"></script>
+    <script src="js/loft-tour-network-optimizer.js"></script>
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-layer-library.js"></script>
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    <script src="js/loft-tour-matterport-ui.js"></script>
+    <script src="js/loft-tour-viewer.js"></script>
+
+    <script>
+        class LoftTourEmbed {
+            constructor() {
+                this.tourId = null;
+                this.engine = null;
+                this.ui = null;
+                this.options = {
+                    showUI: true,
+                    autoplay: false,
+                    allowFullscreen: true
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                // Parse URL parameters
+                this.parseUrlParams();
+                
+                // Setup fullscreen button
+                this.setupFullscreenButton();
+                
+                // Load tour
+                this.loadTour();
+            }
+            
+            parseUrlParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                this.tourId = urlParams.get('tour');
+                this.options.showUI = urlParams.get('ui') !== '0';
+                this.options.autoplay = urlParams.get('autoplay') === '1';
+                this.options.startNode = urlParams.get('start') || null;
+                
+                // Apply minimal UI if requested
+                if (!this.options.showUI) {
+                    document.body.classList.add('embed-minimal');
+                }
+                
+                console.log('Embed options:', this.options);
+            }
+            
+            async loadTour() {
+                if (!this.tourId) {
+                    this.showError('No tour ID specified');
+                    return;
+                }
+                
+                try {
+                    // Fetch tour data
+                    const response = await fetch(`/api/index.php/get-loft-tour?id=${this.tourId}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load tour');
+                    }
+                    
+                    // Initialize tour engine
+                    const container = document.getElementById('viewer-canvas-container');
+                    this.engine = new LoftTourEngine(container, {
+                        embedMode: true,
+                        showUI: this.options.showUI
+                    });
+                    
+                    // Initialize UI if enabled
+                    if (this.options.showUI && typeof LoftTourMatterportUI !== 'undefined') {
+                        this.ui = new LoftTourMatterportUI(this.engine, {
+                            embedMode: true,
+                            showBranding: false
+                        });
+                    }
+                    
+                    // Load tour data
+                    await this.engine.loadTour(data.tour);
+                    
+                    // Start from specific node if requested
+                    if (this.options.startNode) {
+                        const startNodeData = data.tour.nodes.find(n => n.node_id === this.options.startNode);
+                        if (startNodeData) {
+                            await this.engine.loadNode(startNodeData);
+                        }
+                    }
+                    
+                    // Auto-play if requested
+                    if (this.options.autoplay) {
+                        setTimeout(() => {
+                            if (this.engine.nextNode) {
+                                this.engine.nextNode();
+                            }
+                        }, 2000);
+                    }
+                    
+                    // Show tour, hide loading
+                    this.showTour();
+                    
+                    console.log('Embed tour loaded successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to load embed tour:', error);
+                    this.showError(error.message);
+                }
+            }
+            
+            showTour() {
+                document.getElementById('embed-loading').style.display = 'none';
+                document.getElementById('embed-error').style.display = 'none';
+                document.getElementById('viewer-container').style.display = 'block';
+            }
+            
+            showError(message) {
+                document.getElementById('embed-loading').style.display = 'none';
+                document.getElementById('viewer-container').style.display = 'none';
+                
+                const errorElement = document.getElementById('embed-error');
+                errorElement.querySelector('p').textContent = message;
+                errorElement.style.display = 'block';
+            }
+            
+            setupFullscreenButton() {
+                const fullscreenBtn = document.getElementById('embed-fullscreen-btn');
+                
+                if (!this.options.allowFullscreen) {
+                    fullscreenBtn.style.display = 'none';
+                    return;
+                }
+                
+                fullscreenBtn.addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
+                
+                // Listen for fullscreen changes
+                document.addEventListener('fullscreenchange', () => {
+                    this.updateFullscreenButton();
+                });
+            }
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error('Error attempting to enable fullscreen:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            updateFullscreenButton() {
+                const btn = document.getElementById('embed-fullscreen-btn');
+                const icon = btn.querySelector('i');
+                
+                if (document.fullscreenElement) {
+                    icon.className = 'fas fa-compress';
+                    btn.title = 'Exit fullscreen';
+                } else {
+                    icon.className = 'fas fa-expand';
+                    btn.title = 'Enter fullscreen';
+                }
+            }
+        }
+        
+        // Initialize embed when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoftTourEmbed();
+        });
+        
+        // Handle window messages for external control
+        window.addEventListener('message', (event) => {
+            // Add security check for allowed origins in production
+            if (event.data && event.data.type === 'loft-tour-control') {
+                const { action, data } = event.data;
+                
+                switch (action) {
+                    case 'nextNode':
+                        if (window.loftTourEngine && window.loftTourEngine.nextNode) {
+                            window.loftTourEngine.nextNode();
+                        }
+                        break;
+                    case 'previousNode':
+                        if (window.loftTourEngine && window.loftTourEngine.previousNode) {
+                            window.loftTourEngine.previousNode();
+                        }
+                        break;
+                    case 'goToNode':
+                        if (window.loftTourEngine && data.nodeId) {
+                            window.loftTourEngine.goToNode(data.nodeId);
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

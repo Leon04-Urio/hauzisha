@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bulk Property Import (Admin Only)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      max-width: 500px;
+    }
+    input[type="file"] {
+      display: block;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .message {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📂 Bulk Import Properties</h1>
+  <form id="bulkImportForm" enctype="multipart/form-data" method="POST" action="/bulk-import-properties">
+    <label>Select CSV File:</label>
+    <input type="file" name="csv_file" accept=".csv" required />
+    <button type="submit">Upload & Import</button>
+    <div class="message" id="message"></div>
+  </form>
+
+  <!-- Save as update_property_gallery.html -->
+<form action="/your-api-endpoint/p-update-property/123" method="POST" enctype="multipart/form-data">
+  <!-- Replace 123 with your property ID -->
+
+  <!-- Add new gallery images (upload) -->
+  <label>Upload New Gallery Images:</label>
+  <input type="file" name="gallery[]" multiple>
+
+  <!-- Add an existing image path manually -->
+  <label>Add Existing Image Path:</label>
+  <input type="text" name="add_gallery_image" placeholder="/uploads/new_image.jpg">
+
+  <!-- Remove an image path manually -->
+  <label>Remove Image Path:</label>
+  <input type="text" name="remove_gallery_image" placeholder="/uploads/old_image.jpg">
+
+  <button type="submit">Update Property Gallery</button>
+</form>
+
+
+  <script>
+    const form = document.getElementById('bulkImportForm');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/bulk-import-properties', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          message.style.color = 'green';
+          message.textContent = result.message;
+        } else {
+          message.style.color = 'red';
+          message.textContent = result.message || 'Something went wrong.';
+        }
+
+        console.log(result);
+      } catch (error) {
+        message.style.color = 'red';
+        message.textContent = 'Request failed: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html>

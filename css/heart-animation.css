@@ -1,0 +1,144 @@
+/* Instagram-style Floating Heart Animation */
+
+.floating-heart {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    font-size: 2rem;
+    color: #ffd700;
+    animation: floatUp 0.8s ease-out forwards;
+    opacity: 1;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-40px) scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-80px) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* Variation animations for more natural look */
+.floating-heart.variant-1 {
+    animation: floatUpLeft 0.7s ease-out forwards;
+}
+
+.floating-heart.variant-2 {
+    animation: floatUpRight 0.75s ease-out forwards;
+}
+
+.floating-heart.variant-3 {
+    animation: floatUpStraight 0.8s ease-out forwards;
+}
+
+@keyframes floatUpLeft {
+    0% {
+        transform: translate(0, 0) scale(0.5) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-20px, -50px) scale(1) rotate(-10deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-30px, -100px) scale(0.7) rotate(-15deg);
+        opacity: 0;
+    }
+}
+
+@keyframes floatUpRight {
+    0% {
+        transform: translate(0, 0) scale(0.5) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(20px, -50px) scale(1) rotate(10deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(30px, -100px) scale(0.7) rotate(15deg);
+        opacity: 0;
+    }
+}
+
+@keyframes floatUpStraight {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(0, -60px) scale(1.1);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(0, -120px) scale(0.6);
+        opacity: 0;
+    }
+}
+
+/* Pulse effect on the main heart icon when liked */
+.heart-pulse {
+    animation: heartPulse 0.3s ease-in-out;
+}
+
+@keyframes heartPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .floating-heart {
+        font-size: 1.5rem;
+    }
+    
+    @keyframes floatUp {
+        0% {
+            transform: translateY(0) scale(0.5);
+            opacity: 1;
+        }
+        50% {
+            transform: translateY(-30px) scale(1);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translateY(-60px) scale(0.8);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes floatUpLeft {
+        100% {
+            transform: translate(-20px, -70px) scale(0.7) rotate(-15deg);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes floatUpRight {
+        100% {
+            transform: translate(20px, -70px) scale(0.7) rotate(15deg);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes floatUpStraight {
+        100% {
+            transform: translate(0, -90px) scale(0.6);
+            opacity: 0;
+        }
+    }
+}

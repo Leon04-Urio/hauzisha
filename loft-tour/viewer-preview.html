@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hauzisha Virtual Tour</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #viewer-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ── PLAY OVERLAY ── */
+        #play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.42);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+        }
+
+        .play-btn {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.92);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            margin-bottom: 14px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.08);
+            background: #fff;
+        }
+
+        .play-btn svg {
+            width: 26px;
+            height: 26px;
+            fill: #222;
+            margin-left: 4px;
+        }
+
+        .play-label {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 12px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+        }
+
+        /* ── POWERED BY ── */
+        #powered-by {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 9px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            z-index: 6000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewer-container">
+        <div id="pano" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;"></div>
+
+        <!-- Play overlay -->
+        <div id="play-overlay">
+            <button class="play-btn" id="play-btn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+            </button>
+            <span class="play-label">Explore Space</span>
+        </div>
+
+        <!-- Powered by -->
+        <div id="powered-by">Powered by Hauzisha</div>
+
+    </div>
+
+    <script src="lib/marzipano.min.js"></script>
+    <script>
+        // Load panorama in background so it's visible behind the overlay
+        function waitForMarzipano() {
+            return new Promise((resolve, reject) => {
+                let n = 0;
+                const check = () => {
+                    if (typeof Marzipano !== 'undefined') resolve();
+                    else if (n++ > 60) reject(new Error('Marzipano not loaded'));
+                    else setTimeout(check, 100);
+                };
+                check();
+            });
+        }
+
+        async function init() {
+            await waitForMarzipano();
+
+            const viewer = new Marzipano.Viewer(document.getElementById('pano'), {
+                controls: { mouseViewMode: 'drag' }
+            });
+
+            const geometry = new Marzipano.EquirectGeometry([{ width: 2048 }]);
+            const limiter = Marzipano.RectilinearView.limit.traditional(8192, 120 * Math.PI / 180);
+            const view = new Marzipano.RectilinearView({ yaw: 0, pitch: 0, fov: Math.PI / 2.2 }, limiter);
+            const source = Marzipano.ImageUrlSource.fromString('./test-panorama.jpg');
+            const scene = viewer.createScene({ source, geometry, view, pinFirstLevel: true });
+            scene.switchTo();
+        }
+
+        // Play button → open full tour (navigate top-level window), passing return URL
+        document.getElementById('play-btn').addEventListener('click', () => {
+            const p = new URLSearchParams(window.location.search);
+            const returnUrl = encodeURIComponent(window.top.location.href);
+            const image = p.get('image') || '';
+            let url = '/hauzisha/loft-tour/viewer.html?returnUrl=' + returnUrl;
+            if (image) url += '&image=' + encodeURIComponent(image);
+            window.top.location.href = url;
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

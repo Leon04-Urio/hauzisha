@@ -1,0 +1,9 @@
+# CSV Metadata Template for LOFT³ Tours
+# Note: CSV format does not support layers - use JSON format for layer support
+# Required: node_id, label, image
+# Optional: next_node, rotation_h, rotation_v, initial_yaw, initial_pitch, order, description
+
+node_id,label,image,next_node,rotation_h,rotation_v,initial_yaw,initial_pitch,order,description
+entrance,"Main Entrance",entrance.jpg,foyer,30,10,0,0,0,"Welcome to this beautiful property entrance"
+foyer,"Grand Foyer",foyer.jpg,living_room,30,10,0,0,1,"Spacious foyer with elegant design"
+living_room,"Living Room",living_room.jpg,,30,10,0,0,2,"Comfortable living area with modern furnishings"

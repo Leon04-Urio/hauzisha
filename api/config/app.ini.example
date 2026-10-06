@@ -1,0 +1,22 @@
+host = "localhost"
+db_name = ""
+db_user = ""
+db_password = ""
+
+; SMS Configuration (AfricasTalking) - Temporarily disabled for debugging
+africas_talking_api_key = ""
+africas_talking_username = ""
+
+; Email Configuration (SMTP) - Gmail setup
+smtp_host = ""
+smtp_port = 587
+smtp_username = ""
+smtp_password = ""
+from_email = ""
+from_name = ""
+
+
+; Google integrations
+google_client_id = ""
+google_client_secret = ""
+google_maps_api_key = ""

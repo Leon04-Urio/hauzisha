@@ -1,0 +1,1301 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT³ Complete Working Editor</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #d4af37;
+            font-weight: 600;
+        }
+        
+        .header .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: #d4af37;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #b8941f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #d4af37;
+            color: #d4af37;
+        }
+        
+        .btn-outline:hover {
+            background: #d4af37;
+            color: white;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+        
+        .editor-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-header h3 {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .editor-tools {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        
+        .tool-btn:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .tool-btn.active {
+            background: #d4af37;
+            color: white;
+        }
+        
+        .editor-canvas-container {
+            flex: 1;
+            position: relative;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .editor-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            cursor: crosshair;
+        }
+        
+        .editor-canvas.tool-move {
+            cursor: move;
+        }
+        
+        .editor-canvas.tool-resize {
+            cursor: nw-resize;
+        }
+        
+        .editor-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .properties-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-header h4 {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .panel-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .property-group {
+            margin-bottom: 20px;
+        }
+        
+        .property-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .property-group input,
+        .property-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .property-group input:focus,
+        .property-group select:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+        
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .range-input input[type="range"] {
+            flex: 1;
+        }
+        
+        .range-input .value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .layer-list {
+            border-top: 1px solid #e9ecef;
+            padding: 15px 20px;
+        }
+        
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 5px;
+        }
+        
+        .layer-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .layer-item.selected {
+            background: #fff9e6;
+            border: 1px solid #d4af37;
+        }
+        
+        .layer-thumbnail {
+            width: 40px;
+            height: 40px;
+            background: #e9ecef;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        
+        .layer-info {
+            flex: 1;
+        }
+        
+        .layer-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .layer-type {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .layer-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: #d4af37;
+            background: #fff9e6;
+        }
+        
+        .drop-zone.processing {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background: #ffeaea;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #d4af37;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .preview-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .preview-thumbnail {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .preview-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .preview-size {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 400px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .properties-panel {
+                order: -1;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cube"></i> LOFT³ Complete Working Editor</h1>
+            <div class="actions">
+                <button class="btn btn-outline" onclick="showUploadSection()">
+                    <i class="fas fa-upload"></i> Upload
+                </button>
+                <button class="btn btn-secondary" onclick="showEditorSection()">
+                    <i class="fas fa-edit"></i> Editor
+                </button>
+                <button class="btn btn-primary" onclick="showPreviewSection()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+            </div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div id="upload-section" class="section active">
+            <div class="upload-section">
+                <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Drop your panorama images here</div>
+                    <div class="upload-hint">or click to browse files (JPG, PNG)</div>
+                    <input type="file" id="file-input" class="file-input" multiple accept="image/*">
+                </div>
+                
+                <div id="upload-preview" class="preview-grid hidden"></div>
+                
+                <div id="upload-actions" class="hidden" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="processUploadedFiles()">
+                        <i class="fas fa-magic"></i> Generate Tour
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Editor Section -->
+        <div id="editor-section" class="section">
+            <div class="main-content">
+                <div class="editor-panel">
+                    <div class="editor-header">
+                        <h3>Visual Editor</h3>
+                        <div class="editor-tools">
+                            <button class="tool-btn active" data-tool="select" title="Select Tool">
+                                <i class="fas fa-mouse-pointer"></i>
+                            </button>
+                            <button class="tool-btn" data-tool="move" title="Move Tool">
+                                <i class="fas fa-arrows-alt"></i>
+                            </button>
+                            <button class="tool-btn" data-tool="resize" title="Resize Tool">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
+                            <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
+                            <button class="tool-btn" onclick="toggleGrid()" title="Toggle Grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-canvas-container">
+                        <canvas id="editor-canvas" class="editor-canvas" width="800" height="400"></canvas>
+                        <div class="editor-overlay">
+                            <div id="mouse-coords">0, 0</div>
+                            <div>Tool: <span id="current-tool">Select</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="properties-panel">
+                    <div class="panel-header">
+                        <h4>Properties</h4>
+                        <button class="btn-icon" onclick="addNewLayer()" title="Add Layer">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="panel-content">
+                        <div id="layer-properties">
+                            <div style="text-align: center; color: #666; padding: 20px;">
+                                <i class="fas fa-mouse-pointer" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                <p>Select a layer to edit properties</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="layer-list">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <strong>Layers</strong>
+                            <button class="btn-icon" onclick="addNewLayer()" title="Add Layer">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div id="layer-list">
+                            <div style="text-align: center; color: #666; padding: 20px;">
+                                <p>No layers added</p>
+                                <button class="btn btn-outline" onclick="addNewLayer()" style="margin-top: 10px;">
+                                    <i class="fas fa-plus"></i> Add Layer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-secondary" onclick="showUploadSection()">
+                    <i class="fas fa-arrow-left"></i> Back to Upload
+                </button>
+                <button class="btn btn-primary" onclick="showPreviewSection()">
+                    <i class="fas fa-play"></i> Preview Tour
+                </button>
+                <button class="btn btn-primary" onclick="saveTour()">
+                    <i class="fas fa-save"></i> Save Tour
+                </button>
+            </div>
+        </div>
+        
+        <!-- Preview Section -->
+        <div id="preview-section" class="section">
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Tour Preview</h3>
+                    <div>
+                        <button class="btn btn-secondary" onclick="showEditorSection()">
+                            <i class="fas fa-arrow-left"></i> Back to Editor
+                        </button>
+                        <button class="btn btn-primary" onclick="openFullscreenPreview()">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="preview-container" style="width: 100%; height: 600px; background: #000; border-radius: 8px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">
+                        <i class="fas fa-play-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <p>Interactive 3D tour will appear here</p>
+                        <p style="font-size: 14px; opacity: 0.7;">Upload images and generate tour to preview</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentTool = 'select';
+        let uploadedFiles = [];
+        let tourData = null;
+        let selectedLayer = null;
+        let layers = [];
+        let canvas, ctx;
+        let showGrid = false;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEditor();
+            setupEventHandlers();
+        });
+        
+        function initializeEditor() {
+            canvas = document.getElementById('editor-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Draw initial background
+            drawEditor();
+            
+            console.log('Editor initialized successfully');
+        }
+        
+        function setupEventHandlers() {
+            // File upload
+            const fileInput = document.getElementById('file-input');
+            const dropZone = document.getElementById('drop-zone');
+            
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+            
+            // Tool selection
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setTool(this.dataset.tool);
+                });
+            });
+            
+            // Canvas events
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            
+            console.log('Event handlers set up');
+        }
+        
+        // Section management
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+        
+        function showUploadSection() { showSection('upload-section'); }
+        function showEditorSection() { showSection('editor-section'); }
+        function showPreviewSection() { showSection('preview-section'); }
+        
+        // File upload handling
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files);
+            processFiles(files);
+        }
+        
+        function processFiles(files) {
+            const dropZone = document.getElementById('drop-zone');
+            const preview = document.getElementById('upload-preview');
+            const actions = document.getElementById('upload-actions');
+            
+            dropZone.classList.add('processing');
+            
+            // Filter image files
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            
+            if (imageFiles.length === 0) {
+                showNotification('Please select image files (JPG, PNG)', 'error');
+                dropZone.classList.remove('processing');
+                return;
+            }
+            
+            uploadedFiles = imageFiles;
+            
+            // Show preview
+            preview.innerHTML = '';
+            preview.classList.remove('hidden');
+            
+            imageFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}" class="preview-thumbnail">
+                        <div class="preview-name">${file.name}</div>
+                        <div class="preview-size">${formatFileSize(file.size)}</div>
+                    `;
+                    preview.appendChild(previewItem);
+                    
+                    // Show actions when all files are loaded
+                    if (preview.children.length === imageFiles.length) {
+                        dropZone.classList.remove('processing');
+                        dropZone.classList.add('success');
+                        actions.classList.remove('hidden');
+                        showNotification(`${imageFiles.length} images uploaded successfully!`, 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function processUploadedFiles() {
+            if (uploadedFiles.length === 0) {
+                showNotification('No files to process', 'error');
+                return;
+            }
+            
+            // Generate tour data
+            tourData = {
+                name: 'Generated Tour',
+                created: new Date().toISOString(),
+                nodes: uploadedFiles.map((file, index) => ({
+                    id: `node_${index + 1}`,
+                    label: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+                    imageUrl: URL.createObjectURL(file),
+                    nextNode: index < uploadedFiles.length - 1 ? `node_${index + 2}` : null,
+                    layers: []
+                }))
+            };
+            
+            showNotification('Tour generated successfully!', 'success');
+            showEditorSection();
+            
+            // Load first node in editor
+            if (tourData.nodes.length > 0) {
+                loadNodeInEditor(tourData.nodes[0]);
+            }
+        }
+        
+        // Editor functionality
+        function setTool(tool) {
+            currentTool = tool;
+            
+            // Update UI
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
+            document.getElementById('current-tool').textContent = tool.charAt(0).toUpperCase() + tool.slice(1);
+            
+            // Update cursor
+            canvas.className = `editor-canvas tool-${tool}`;
+            
+            console.log('Tool set to:', tool);
+        }
+        
+        function toggleGrid() {
+            showGrid = !showGrid;
+            drawEditor();
+            console.log('Grid toggled:', showGrid);
+        }
+        
+        function drawEditor() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid if enabled
+            if (showGrid) {
+                ctx.strokeStyle = '#e9ecef';
+                ctx.lineWidth = 1;
+                
+                const gridSize = 20;
+                for (let x = 0; x <= canvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for (let y = 0; y <= canvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw layers
+            layers.forEach(layer => {
+                drawLayer(layer);
+            });
+        }
+        
+        function drawLayer(layer) {
+            ctx.save();
+            
+            // Apply transformations
+            ctx.globalAlpha = layer.opacity || 1;
+            
+            // Draw layer (placeholder for now)
+            ctx.fillStyle = layer === selectedLayer ? '#d4af37' : '#007bff';
+            ctx.fillRect(layer.x - 25, layer.y - 25, 50, 50);
+            
+            // Draw selection handles if selected
+            if (layer === selectedLayer) {
+                ctx.fillStyle = '#fff';
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2;
+                
+                // Corner handles
+                const handles = [
+                    { x: layer.x - 25, y: layer.y - 25 },
+                    { x: layer.x + 25, y: layer.y - 25 },
+                    { x: layer.x + 25, y: layer.y + 25 },
+                    { x: layer.x - 25, y: layer.y + 25 }
+                ];
+                
+                handles.forEach(handle => {
+                    ctx.fillRect(handle.x - 3, handle.y - 3, 6, 6);
+                    ctx.strokeRect(handle.x - 3, handle.y - 3, 6, 6);
+                });
+            }
+            
+            ctx.restore();
+        }
+        
+        function loadNodeInEditor(node) {
+            // Load node background image
+            if (node.imageUrl) {
+                const img = new Image();
+                img.onload = function() {
+                    // Draw background image
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Calculate aspect ratio
+                    const aspectRatio = img.width / img.height;
+                    const canvasAspectRatio = canvas.width / canvas.height;
+                    
+                    let drawWidth, drawHeight, drawX, drawY;
+                    
+                    if (aspectRatio > canvasAspectRatio) {
+                        drawWidth = canvas.width;
+                        drawHeight = canvas.width / aspectRatio;
+                        drawX = 0;
+                        drawY = (canvas.height - drawHeight) / 2;
+                    } else {
+                        drawWidth = canvas.height * aspectRatio;
+                        drawHeight = canvas.height;
+                        drawX = (canvas.width - drawWidth) / 2;
+                        drawY = 0;
+                    }
+                    
+                    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+                    
+                    // Draw grid and layers on top
+                    if (showGrid) {
+                        ctx.strokeStyle = 'rgba(233, 236, 239, 0.5)';
+                        ctx.lineWidth = 1;
+                        
+                        const gridSize = 20;
+                        for (let x = 0; x <= canvas.width; x += gridSize) {
+                            ctx.beginPath();
+                            ctx.moveTo(x, 0);
+                            ctx.lineTo(x, canvas.height);
+                            ctx.stroke();
+                        }
+                        
+                        for (let y = 0; y <= canvas.height; y += gridSize) {
+                            ctx.beginPath();
+                            ctx.moveTo(0, y);
+                            ctx.lineTo(canvas.width, y);
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // Draw existing layers
+                    layers.forEach(layer => {
+                        drawLayer(layer);
+                    });
+                };
+                img.src = node.imageUrl;
+            }
+            
+            console.log('Node loaded in editor:', node.id);
+        }
+        
+        // Canvas interaction
+        function handleCanvasMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if clicking on existing layer
+            const clickedLayer = layers.find(layer => {
+                return Math.abs(x - layer.x) < 25 && Math.abs(y - layer.y) < 25;
+            });
+            
+            if (clickedLayer) {
+                selectLayer(clickedLayer);
+            } else if (currentTool === 'select') {
+                // Deselect if clicking empty space
+                selectLayer(null);
+            }
+            
+            drawEditor();
+        }
+        
+        function handleCanvasMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Update coordinates display
+            document.getElementById('mouse-coords').textContent = `${Math.round(x)}, ${Math.round(y)}`;
+        }
+        
+        function handleCanvasMouseUp(e) {
+            // Handle mouse up events
+        }
+        
+        // Layer management
+        function addNewLayer() {
+            const newLayer = {
+                id: `layer_${Date.now()}`,
+                name: `Layer ${layers.length + 1}`,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                scale: 1,
+                opacity: 1,
+                rotation: 0,
+                parallaxFactor: 0.5,
+                visible: true
+            };
+            
+            layers.push(newLayer);
+            selectLayer(newLayer);
+            updateLayerList();
+            drawEditor();
+            
+            showNotification('New layer added', 'success');
+        }
+        
+        function selectLayer(layer) {
+            selectedLayer = layer;
+            updateLayerProperties();
+            updateLayerList();
+            drawEditor();
+        }
+        
+        function updateLayerProperties() {
+            const propertiesDiv = document.getElementById('layer-properties');
+            
+            if (!selectedLayer) {
+                propertiesDiv.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        <i class="fas fa-mouse-pointer" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>Select a layer to edit properties</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            propertiesDiv.innerHTML = `
+                <div class="property-group">
+                    <label>Name</label>
+                    <input type="text" value="${selectedLayer.name}" onchange="updateLayerProperty('name', this.value)">
+                </div>
+                
+                <div class="property-group">
+                    <label>Position X</label>
+                    <input type="number" value="${selectedLayer.x}" onchange="updateLayerProperty('x', parseFloat(this.value))">
+                </div>
+                
+                <div class="property-group">
+                    <label>Position Y</label>
+                    <input type="number" value="${selectedLayer.y}" onchange="updateLayerProperty('y', parseFloat(this.value))">
+                </div>
+                
+                <div class="property-group">
+                    <label>Scale</label>
+                    <div class="range-input">
+                        <input type="range" min="0.1" max="3" step="0.1" value="${selectedLayer.scale}" 
+                               oninput="updateLayerProperty('scale', parseFloat(this.value)); this.nextElementSibling.textContent = this.value">
+                        <span class="value">${selectedLayer.scale}</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <label>Opacity</label>
+                    <div class="range-input">
+                        <input type="range" min="0" max="1" step="0.01" value="${selectedLayer.opacity}" 
+                               oninput="updateLayerProperty('opacity', parseFloat(this.value)); this.nextElementSibling.textContent = this.value">
+                        <span class="value">${selectedLayer.opacity}</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <label>Rotation</label>
+                    <div class="range-input">
+                        <input type="range" min="-180" max="180" step="1" value="${selectedLayer.rotation}" 
+                               oninput="updateLayerProperty('rotation', parseFloat(this.value)); this.nextElementSibling.textContent = this.value + '°'">
+                        <span class="value">${selectedLayer.rotation}°</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <label>Parallax Factor</label>
+                    <div class="range-input">
+                        <input type="range" min="0" max="1" step="0.01" value="${selectedLayer.parallaxFactor}" 
+                               oninput="updateLayerProperty('parallaxFactor', parseFloat(this.value)); this.nextElementSibling.textContent = this.value">
+                        <span class="value">${selectedLayer.parallaxFactor}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-outline" onclick="duplicateLayer()" style="flex: 1;">
+                        <i class="fas fa-copy"></i> Duplicate
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteLayer()" style="background: #dc3545;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            `;
+        }
+        
+        function updateLayerProperty(property, value) {
+            if (selectedLayer) {
+                selectedLayer[property] = value;
+                updateLayerList();
+                drawEditor();
+                console.log(`Updated ${property} to ${value}`);
+            }
+        }
+        
+        function updateLayerList() {
+            const listDiv = document.getElementById('layer-list');
+            
+            if (layers.length === 0) {
+                listDiv.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        <p>No layers added</p>
+                        <button class="btn btn-outline" onclick="addNewLayer()" style="margin-top: 10px;">
+                            <i class="fas fa-plus"></i> Add Layer
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            listDiv.innerHTML = layers.map((layer, index) => `
+                <div class="layer-item ${layer === selectedLayer ? 'selected' : ''}" onclick="selectLayer(layers[${index}])">
+                    <div class="layer-thumbnail">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">${layer.name}</div>
+                        <div class="layer-type">Position: ${Math.round(layer.x)}, ${Math.round(layer.y)}</div>
+                    </div>
+                    <div class="layer-actions">
+                        <button class="btn-icon" onclick="event.stopPropagation(); toggleLayerVisibility(${index})" title="${layer.visible ? 'Hide' : 'Show'}">
+                            <i class="fas fa-${layer.visible ? 'eye' : 'eye-slash'}"></i>
+                        </button>
+                        <button class="btn-icon" onclick="event.stopPropagation(); deleteLayerByIndex(${index})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function duplicateLayer() {
+            if (selectedLayer) {
+                const newLayer = {
+                    ...selectedLayer,
+                    id: `layer_${Date.now()}`,
+                    name: selectedLayer.name + ' Copy',
+                    x: selectedLayer.x + 20,
+                    y: selectedLayer.y + 20
+                };
+                
+                layers.push(newLayer);
+                selectLayer(newLayer);
+                updateLayerList();
+                drawEditor();
+                
+                showNotification('Layer duplicated', 'success');
+            }
+        }
+        
+        function deleteLayer() {
+            if (selectedLayer) {
+                const index = layers.indexOf(selectedLayer);
+                layers.splice(index, 1);
+                selectLayer(null);
+                updateLayerList();
+                drawEditor();
+                
+                showNotification('Layer deleted', 'success');
+            }
+        }
+        
+        function deleteLayerByIndex(index) {
+            layers.splice(index, 1);
+            if (selectedLayer === layers[index]) {
+                selectLayer(null);
+            }
+            updateLayerList();
+            drawEditor();
+            
+            showNotification('Layer deleted', 'success');
+        }
+        
+        function toggleLayerVisibility(index) {
+            layers[index].visible = !layers[index].visible;
+            updateLayerList();
+            drawEditor();
+        }
+        
+        // Save functionality
+        function saveTour() {
+            if (!tourData) {
+                showNotification('No tour data to save', 'error');
+                return;
+            }
+            
+            try {
+                // Update tour data with current layers
+                if (tourData.nodes && tourData.nodes.length > 0) {
+                    tourData.nodes[0].layers = layers;
+                }
+                
+                // Create downloadable JSON
+                const blob = new Blob([JSON.stringify(tourData, null, 2)], { 
+                    type: 'application/json' 
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${tourData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_tour.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showNotification('Tour saved successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('Failed to save tour: ' + error.message, 'error');
+            }
+        }
+        
+        // Preview functionality
+        function openFullscreenPreview() {
+            if (!tourData) {
+                showNotification('No tour data to preview', 'error');
+                return;
+            }
+            
+            // Create fullscreen preview window
+            const previewWindow = window.open('', '_blank', 'fullscreen=yes');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Tour Preview</title>
+                    <style>
+                        body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+                        .preview-container { width: 100vw; height: 100vh; position: relative; }
+                        .preview-image { width: 100%; height: 100%; object-fit: cover; }
+                        .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+                                   background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 25px; }
+                        .controls button { background: #d4af37; border: none; color: white; padding: 8px 16px; 
+                                          border-radius: 20px; margin: 0 5px; cursor: pointer; }
+                        .controls button:hover { background: #b8941f; }
+                    </style>
+                </head>
+                <body>
+                    <div class="preview-container">
+                        <img id="preview-image" class="preview-image" src="${tourData.nodes[0].imageUrl}" alt="Tour Preview">
+                        <div class="controls">
+                            <button onclick="previousNode()">← Previous</button>
+                            <button onclick="nextNode()">Next →</button>
+                            <button onclick="window.close()">Close</button>
+                        </div>
+                    </div>
+                    <script>
+                        let currentNodeIndex = 0;
+                        const nodes = ${JSON.stringify(tourData.nodes)};
+                        
+                        function nextNode() {
+                            if (currentNodeIndex < nodes.length - 1) {
+                                currentNodeIndex++;
+                                document.getElementById('preview-image').src = nodes[currentNodeIndex].imageUrl;
+                            }
+                        }
+                        
+                        function previousNode() {
+                            if (currentNodeIndex > 0) {
+                                currentNodeIndex--;
+                                document.getElementById('preview-image').src = nodes[currentNodeIndex].imageUrl;
+                            }
+                        }
+                        
+                        // Keyboard navigation
+                        document.addEventListener('keydown', function(e) {
+                            if (e.key === 'ArrowRight') nextNode();
+                            if (e.key === 'ArrowLeft') previousNode();
+                            if (e.key === 'Escape') window.close();
+                        });
+                    </script>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

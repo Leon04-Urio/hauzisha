@@ -1,0 +1,1656 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Tour</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+
+        #viewer-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Premium Loading Screen */
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 32px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loading h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #loading p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+
+        /* Premium UI Overlay */
+        .tour-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .tour-ui>* {
+            pointer-events: auto;
+        }
+
+        /* Smart Auto-Hide System */
+        .ui-element {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ui-element.auto-hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95);
+        }
+
+        .ui-element:hover {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: scale(1) !important;
+        }
+
+        /* Transparent Top Bar - Completely Invisible Background */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 48px;
+            background: transparent;
+            border: none;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: none;
+        }
+
+        .property-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .property-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .property-details h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .property-details p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .top-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+        }
+
+        .control-btn:hover {
+            background: rgba(212, 175, 55, 0.15);
+            border-color: rgba(212, 175, 55, 0.3);
+            color: #d4af37;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Floating Side Panels - Non-overlapping */
+        .side-panel-left {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            width: 280px;
+            max-height: calc(100vh - 200px);
+        }
+
+        .side-panel-right {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            width: 280px;
+            max-height: calc(100vh - 200px);
+        }
+
+        /* Minimap - Darker Glassmorphism */
+        .minimap {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .minimap-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .minimap-content {
+            width: 100%;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-position {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: #d4af37;
+            border-radius: 50%;
+            box-shadow:
+                0 0 20px rgba(212, 175, 55, 0.8),
+                0 0 40px rgba(212, 175, 55, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        /* Property Stats Panel - Darker Glassmorphism */
+        .property-panel {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateX(0);
+            opacity: 1;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .property-panel.hidden {
+            transform: translateX(100%);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .property-panel h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(212, 175, 55, 0.08);
+            border-color: rgba(212, 175, 55, 0.2);
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .room-features h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 6px 0;
+        }
+
+        .feature-item i {
+            color: #d4af37;
+            width: 14px;
+            font-size: 12px;
+        }
+
+        /* Navigation Controls - Darker Glassmorphism */
+        .side-nav {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.4);
+            color: #d4af37;
+            transform: translateX(-3px);
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.6),
+                0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Bottom Info Panel - Attached to Bottom */
+        .bottom-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: none;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow:
+                0 -8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-nav-arrows {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .footer-nav-arrows button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .footer-nav-arrows button:hover {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+
+        .scene-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .scene-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .scene-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .distance-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+        }
+
+        .distance-info i {
+            color: #d4af37;
+            font-size: 12px;
+        }
+
+        .distance-text {
+            font-size: 12px;
+            color: #d4af37;
+            font-weight: 500;
+        }
+
+        /* Navigation Dots - Enhanced */
+        .nav-dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-dot.active {
+            background: #d4af37;
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+        }
+
+        .nav-dot:hover {
+            background: rgba(212, 175, 55, 0.6);
+            transform: scale(1.2);
+        }
+
+        /* Room Info Modal - Darker Glassmorphism */
+        .room-info-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .room-info-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .room-info-overlay h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .room-info-overlay p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 24px;
+        }
+
+        .room-dimensions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .dimension-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 60px;
+        }
+
+        .dimension-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 4px;
+        }
+
+        .dimension-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .close-overlay {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        /* Premium Visual Effects */
+
+        /* Floating Info Bubbles */
+        .info-hotspot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(212, 175, 55, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            animation: hotspotPulse 2s infinite;
+            z-index: 1500;
+            transition: all 0.3s ease;
+        }
+
+        .info-hotspot:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            background: rgba(212, 175, 55, 1);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+
+        .info-bubble {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1600;
+        }
+
+        .info-hotspot:hover .info-bubble {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @keyframes hotspotPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+            }
+        }
+
+        /* Room Transition Arrows */
+        .transition-arrow {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+            z-index: 1500;
+            animation: arrowFloat 3s ease-in-out infinite;
+        }
+
+        .transition-arrow:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.8);
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .transition-arrow i {
+            color: #d4af37;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .transition-arrow:hover i {
+            transform: translateX(3px);
+        }
+
+        @keyframes arrowFloat {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) translateY(0px);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) translateY(-8px);
+            }
+        }
+
+        /* Particle System */
+        .particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 500;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        .particle.gold {
+            background: rgba(212, 175, 55, 0.4);
+            width: 1px;
+            height: 1px;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-10px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Dynamic Lighting Overlays */
+        .lighting-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            transition: all 2s ease;
+            mix-blend-mode: overlay;
+        }
+
+        .lighting-overlay.golden-hour {
+            background: radial-gradient(circle at 70% 30%,
+                    rgba(255, 200, 100, 0.15) 0%,
+                    rgba(255, 150, 50, 0.1) 30%,
+                    transparent 70%);
+        }
+
+        .lighting-overlay.blue-hour {
+            background: radial-gradient(circle at 30% 20%,
+                    rgba(100, 150, 255, 0.1) 0%,
+                    rgba(50, 100, 200, 0.08) 40%,
+                    transparent 80%);
+        }
+
+        .lighting-overlay.sunset {
+            background: linear-gradient(45deg,
+                    rgba(255, 100, 50, 0.12) 0%,
+                    rgba(255, 200, 100, 0.08) 50%,
+                    rgba(100, 50, 200, 0.06) 100%);
+        }
+
+        /* Depth of Field Blur */
+        .depth-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            backdrop-filter: blur(0px);
+            transition: backdrop-filter 0.6s ease;
+        }
+
+        .depth-blur.active {
+            backdrop-filter: blur(3px);
+        }
+
+        /* Parallax UI Elements */
+        .parallax-element {
+            transition: transform 0.1s ease-out;
+        }
+
+        .parallax-slow {
+            transform: translateZ(0);
+        }
+
+        .parallax-medium {
+            transform: translateZ(0);
+        }
+
+        .parallax-fast {
+            transform: translateZ(0);
+        }
+
+        /* Lighting Control Panel */
+        .lighting-controls {
+            position: absolute;
+            top: 100px;
+            right: 320px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            z-index: 1200;
+        }
+
+        .lighting-controls.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lighting-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lighting-btn:hover,
+        .lighting-btn.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.4);
+            color: #d4af37;
+        }
+
+        /* Enhanced Glassmorphism Effects */
+        .glass-effect {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Luxury Animations */
+        .luxury-glow {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .luxury-glow::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                    transparent,
+                    rgba(212, 175, 55, 0.1),
+                    transparent);
+            transform: rotate(45deg);
+            animation: luxuryShine 3s infinite;
+        }
+
+        @keyframes luxuryShine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            50% {
+                transform: translateX(0%) translateY(0%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        /* Premium Tooltips */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .property-panel {
+                right: 16px;
+                width: 280px;
+                padding: 20px;
+            }
+
+            .room-info-overlay {
+                left: 16px;
+                right: 16px;
+                max-width: none;
+                transform: translateY(-50%);
+                padding: 24px;
+            }
+
+            .room-dimensions {
+                gap: 16px;
+            }
+
+            .dimension-value {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                left: 16px;
+                right: 16px;
+                top: 16px;
+                height: 64px;
+                padding: 0 16px;
+            }
+
+            .property-details h3 {
+                font-size: 16px;
+            }
+
+            .property-details p {
+                font-size: 12px;
+            }
+
+            .bottom-panel {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                padding: 20px;
+            }
+
+            .scene-title {
+                font-size: 20px;
+            }
+
+            .minimap {
+                left: 16px;
+                top: 96px;
+                width: 160px;
+                height: 120px;
+            }
+
+            .side-nav {
+                right: 16px;
+            }
+
+            .nav-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+        }
+
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+
+            .side-panel-left,
+            .side-panel-right {
+                width: 260px;
+            }
+
+            .top-bar {
+                left: 16px;
+                right: 16px;
+                top: 16px;
+                height: 56px;
+                padding: 0 16px;
+            }
+
+            .property-details h3 {
+                font-size: 14px;
+            }
+
+            .property-details p {
+                font-size: 11px;
+            }
+
+            .bottom-panel {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                padding: 16px;
+            }
+
+            .scene-title {
+                font-size: 18px;
+            }
+
+            .side-nav {
+                right: 16px;
+            }
+
+            .nav-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 14px;
+            }
+
+            .room-info-overlay {
+                margin: 16px;
+                padding: 24px;
+            }
+        }
+
+        /* ── BACK BUTTON ── */
+        #back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #d4af37;
+            color: #000;
+            border: none;
+            border-radius: 24px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 3000;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.45);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        #back-btn:hover {
+            background: #f4d03f;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        #back-btn i {
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewer-container">
+        <div id="pano" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;"></div>
+        <div id="loading">
+            <div class="spinner"></div>
+            <h2>Loading Virtual Tour</h2>
+        </div>
+
+        <!-- Premium UI Overlay -->
+        <div class="tour-ui" id="tour-ui" style="display: none;">
+            <!-- Particle System -->
+            <div class="particle-container" id="particle-container"></div>
+
+            <!-- Dynamic Lighting Overlay -->
+            <div class="lighting-overlay" id="lighting-overlay"></div>
+
+            <!-- Depth of Field Blur -->
+            <div class="depth-blur" id="depth-blur"></div>
+
+            <!-- Top Bar -->
+            <div class="top-bar ui-element fade-in" style="opacity:1!important;">
+                <button id="back-btn" onclick="goBackToProperty()" title="Back to Property">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </button>
+                <div style="flex:1;"></div>
+
+
+
+
+
+                <div class="top-controls">
+                    <div class="control-btn tooltip" data-tooltip="Property Details" onclick="togglePropertyPanel()">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="control-btn tooltip" data-tooltip="Room Info" onclick="showRoomInfo()">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="control-btn tooltip" data-tooltip="Lighting" onclick="toggleLightingControls()">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="control-btn tooltip" data-tooltip="Share Tour" onclick="shareTour()">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="control-btn tooltip" data-tooltip="Fullscreen" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i>
+                    </div>
+                    <div class="control-btn tooltip" data-tooltip="Auto Tour" onclick="toggleAutoTour()">
+                        <i class="fas fa-play" id="auto-tour-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lighting Controls Panel -->
+            <div class="lighting-controls" id="lighting-controls">
+                <div class="lighting-btn active" onclick="setLighting('natural')">Natural</div>
+                <div class="lighting-btn" onclick="setLighting('golden-hour')">Golden Hour</div>
+                <div class="lighting-btn" onclick="setLighting('blue-hour')">Blue Hour</div>
+                <div class="lighting-btn" onclick="setLighting('sunset')">Sunset</div>
+            </div>
+
+            <!-- Left Side Panel -->
+            <div class="side-panel-left">
+            </div>
+
+            <!-- Right Side Panel -->
+            <div class="side-panel-right">
+                <!-- Property Details Panel -->
+                <div class="property-panel ui-element" id="property-panel">
+                    <h3><i class="fas fa-building"></i> Property Details</h3>
+                    <div class="property-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-area">2,400</div>
+                            <div class="stat-label">Sq Ft</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="bedrooms">3</div>
+                            <div class="stat-label">Bedrooms</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="bathrooms">2</div>
+                            <div class="stat-label">Bathrooms</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="year-built">2023</div>
+                            <div class="stat-label">Year Built</div>
+                        </div>
+                    </div>
+                    <div class="room-features">
+                        <h4>Current Room Features</h4>
+                        <div class="feature-list" id="current-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Wooden flooring</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Ambient lighting</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Smart lighting</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Info Modal -->
+            <div class="room-info-overlay" id="room-info-overlay">
+                <div class="close-overlay" onclick="hideRoomInfo()">
+                    <i class="fas fa-times"></i>
+                </div>
+                <h2 id="overlay-room-title">Grand Entrance</h2>
+                <p id="overlay-room-description">Wooden flooring with ambient lighting</p>
+                <div class="room-dimensions">
+                    <div class="dimension-item">
+                        <div class="dimension-value">12'</div>
+                        <div class="dimension-label">Width</div>
+                    </div>
+                    <div class="dimension-item">
+                        <div class="dimension-value">15'</div>
+                        <div class="dimension-label">Length</div>
+                    </div>
+                    <div class="dimension-item">
+                        <div class="dimension-value">10'</div>
+                        <div class="dimension-label">Height</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Info Panel -->
+            <div class="bottom-panel ui-element fade-in">
+                <div class="scene-info">
+                    <div>
+                        <div class="scene-title" id="scene-title">Room 1</div>
+                    </div>
+                    <div class="distance-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="distance-text" id="distance-text">0m from entrance</span>
+                    </div>
+                </div>
+                <div class="footer-nav-arrows">
+                    <button onclick="previousScene()" title="Previous Room"><i class="fas fa-chevron-left"></i></button>
+                    <div class="nav-dots" id="nav-dots">
+                        <div class="nav-dot active" onclick="goToScene(0)"></div>
+                    </div>
+                    <button onclick="nextScene()" title="Next Room"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marzipano -->
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Marzipano -->
+    <script src="lib/marzipano.min.js"></script>
+
+    <script>
+        console.log('🚀 Starting minimal viewer...');
+
+        // Wait for Marzipano to load
+        function waitForMarzipano() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const check = () => {
+                    if (typeof Marzipano !== 'undefined') {
+                        console.log('✅ Marzipano loaded');
+                        resolve();
+                    } else if (attempts > 50) {
+                        reject(new Error('Marzipano failed to load'));
+                    } else {
+                        attempts++;
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        }
+
+        function togglePropertyPanel() {
+            const panel = document.getElementById('property-panel');
+            if (panel) panel.classList.toggle('hidden');
+        }
+
+        function showRoomInfo() {
+            const overlay = document.getElementById('room-info-overlay');
+            if (overlay) overlay.classList.add('active');
+        }
+
+        function hideRoomInfo() {
+            const overlay = document.getElementById('room-info-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        function toggleLightingControls() {
+            const controls = document.getElementById('lighting-controls');
+            if (controls) controls.classList.toggle('active');
+        }
+
+        function setLighting(mode) {
+            const pano = document.getElementById('pano');
+            const btns = document.querySelectorAll('.lighting-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            const active = [...btns].find(b => b.getAttribute('onclick').includes(mode));
+            if (active) active.classList.add('active');
+
+            const filters = {
+                'natural': 'none',
+                'golden-hour': 'sepia(0.4) saturate(1.4) brightness(1.1)',
+                'blue-hour': 'hue-rotate(200deg) saturate(1.2) brightness(0.85)',
+                'sunset': 'sepia(0.6) saturate(1.6) hue-rotate(-10deg) brightness(1.05)'
+            };
+            if (pano) pano.style.filter = filters[mode] || 'none';
+        }
+
+        function initPropertyData() {
+            const params = new URLSearchParams(window.location.search);
+            const name = params.get('name') ? decodeURIComponent(params.get('name')) : '';
+            if (name) {
+                propertyData.name = name;
+                const nameEl = document.getElementById('property-name');
+                if (nameEl) nameEl.textContent = name;
+            }
+        }
+
+        async function initViewer() {
+            try {
+                await waitForMarzipano();
+
+                // Hide loading and show UI
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('tour-ui').style.display = 'block';
+
+                    // Initialize property data
+                    initPropertyData();
+
+                    // Start distance tracking
+                    startDistanceTracking();
+                }, 1500);
+
+                // Create Marzipano viewer
+                const container = document.getElementById('pano');
+
+                const viewer = new Marzipano.Viewer(container, {
+                    controls: { mouseViewMode: 'drag' },
+                    stage: { progressive: false },
+                    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+                });
+
+                console.log('✅ Marzipano viewer created');
+
+                // Load images from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                let tourImages = [];
+                try {
+                    const imagesParam = urlParams.get('images');
+                    if (imagesParam) tourImages = JSON.parse(decodeURIComponent(imagesParam));
+                } catch (e) { }
+                if (!tourImages.length) {
+                    const single = urlParams.get('image') ? decodeURIComponent(urlParams.get('image')) : './test-panorama.jpg';
+                    tourImages = [single];
+                }
+                console.log('🖼️ Loading', tourImages.length, 'panorama(s)');
+
+                const geometry = new Marzipano.EquirectGeometry([{ width: 8192 }]);
+                const limiter = Marzipano.RectilinearView.limit.traditional(4096, 120 * Math.PI / 180);
+
+                // Build all scenes
+                window.tourScenes = tourImages.map((imgUrl, idx) => {
+                    const view = new Marzipano.RectilinearView({ yaw: 0, pitch: 0, fov: Math.PI / 2 }, limiter);
+                    const source = Marzipano.ImageUrlSource.fromString(imgUrl);
+                    return viewer.createScene({ source, geometry, view, pinFirstLevel: true });
+                });
+
+                window.tourSceneIndex = 0;
+                window.tourScenes[0].switchTo();
+
+                // Update nav dots to match image count
+                const dotsContainer = document.querySelector('.nav-dots');
+                if (dotsContainer) {
+                    dotsContainer.innerHTML = '';
+                    tourImages.forEach((_, idx) => {
+                        const dot = document.createElement('div');
+                        dot.className = 'nav-dot' + (idx === 0 ? ' active' : '');
+                        dot.onclick = () => window.goToTourScene(idx);
+                        dotsContainer.appendChild(dot);
+                    });
+                }
+
+                window.goToTourScene = function (idx) {
+                    if (idx < 0 || idx >= window.tourScenes.length) return;
+                    window.tourScenes[idx].switchTo();
+                    window.tourSceneIndex = idx;
+                    document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+                    const titles = ['Room 1', 'Room 2', 'Room 3'];
+                    const titleEl = document.getElementById('scene-title');
+                    if (titleEl) titleEl.textContent = titles[idx] || 'Room ' + (idx + 1);
+                };
+
+                // Wire prev/next buttons
+                window.nextScene = function () { window.goToTourScene((window.tourSceneIndex + 1) % window.tourScenes.length); };
+                window.previousScene = function () { window.goToTourScene((window.tourSceneIndex - 1 + window.tourScenes.length) % window.tourScenes.length); };
+
+                window.marzipanoViewer = viewer;
+                window.currentScene = window.tourScenes[0];
+
+            } catch (error) {
+                console.error('❌ Failed to initialize viewer:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="spinner"></div>
+                    <h2>Connection Error</h2>
+                    <p>Unable to load the virtual tour. Please check your connection.</p>
+                `;
+            }
+        }
+
+        // Property data and scenes
+        const propertyData = {
+            name: "",
+            location: "",
+            totalArea: "2,400 sq ft",
+            bedrooms: 3,
+            bathrooms: 2,
+            yearBuilt: 2023,
+            scenes: [
+                {
+                    id: 0,
+                    title: "Grand Entrance",
+                    subtitle: "Wooden flooring with ambient lighting",
+                    distanceFromEntrance: 0,
+                    roomType: "Foyer",
+                    dimensions: { width: "12'", length: "15'", height: "10'" },
+                    features: ["Wooden flooring", "Ambient lighting", "Smart lighting", "Security system"]
+                },
+                {
+                    id: 1,
+                    title: "Living Room",
+                    subtitle: "Open concept with city views",
+                    distanceFromEntrance: 12,
+                    roomType: "Living Area",
+                    dimensions: { width: "20'", length: "25'", height: "12'" },
+                    features: ["Floor-to-ceiling windows", "Hardwood floors", "Built-in entertainment center", "Gas fireplace"]
+                },
+                {
+                    id: 2,
+                    title: "Master Bedroom",
+                    subtitle: "Spacious suite with walk-in closet",
+                    distanceFromEntrance: 25,
+                    roomType: "Bedroom",
+                    dimensions: { width: "16'", length: "18'", height: "10'" },
+                    features: ["King-size bed space", "Walk-in closet", "En-suite bathroom", "City views"]
+                }
+            ]
+        };
+
+        let currentSceneIndex = 0;
+        let autoTourActive = false;
+        let autoTourRAF = null;
+        let autoTourStartScene = 0;
+
+        function toggleAutoTour() {
+            autoTourActive = !autoTourActive;
+            const btn = document.getElementById('auto-tour-icon');
+            if (autoTourActive) {
+                btn.className = 'fas fa-pause';
+                autoTourStartScene = window.tourSceneIndex || 0;
+                startAutoTour();
+            } else {
+                btn.className = 'fas fa-play';
+                stopAutoTour();
+            }
+        }
+
+        function startAutoTour() {
+            const totalScenes = window.tourScenes ? window.tourScenes.length : 1;
+            let scenesDone = 0;
+
+            function panScene() {
+                if (!autoTourActive) return;
+                const viewer = window.marzipanoViewer;
+                if (!viewer) return;
+                const scene = window.tourScenes[window.tourSceneIndex];
+                if (!scene) return;
+                const view = scene.view();
+                const startYaw = view.yaw();
+                const targetYaw = startYaw + (2 * Math.PI); // full 360 clockwise
+                const duration = 8000; // 8 seconds per room
+                const startTime = performance.now();
+
+                function animate(now) {
+                    if (!autoTourActive) return;
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // ease in-out
+                    const eased = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+                    view.setParameters({ yaw: startYaw + eased * (2 * Math.PI) });
+                    if (progress < 1) {
+                        autoTourRAF = requestAnimationFrame(animate);
+                    } else {
+                        // Move to next scene
+                        scenesDone++;
+                        if (scenesDone >= totalScenes) {
+                            // Back to start - stop
+                            window.goToTourScene(autoTourStartScene);
+                            autoTourActive = false;
+                            document.getElementById('auto-tour-icon').className = 'fas fa-play';
+                        } else {
+                            window.nextScene();
+                            setTimeout(panScene, 300);
+                        }
+                    }
+                }
+                autoTourRAF = requestAnimationFrame(animate);
+            }
+            panScene();
+        }
+
+        function stopAutoTour() {
+            if (autoTourRAF) { cancelAnimationFrame(autoTourRAF); autoTourRAF = null; }
+        }
+
+        function startDistanceTracking() {
+            // Simulate real-time distance updates
+            setInterval(() => {
+                const currentScene = propertyData.scenes[currentSceneIndex];
+                const baseDistance = currentScene.distanceFromEntrance;
+                const variation = Math.sin(Date.now() / 1000) * 0.5; // Small variation for realism
+                const distance = Math.max(0, baseDistance + variation);
+                const distEl2 = document.getElementById('distance-text'); if (distEl2) distEl2.textContent = distance.toFixed(1) + 'm from entrance';
+            }, 1000);
+        }
+
+        function shareTour() {
+            if (navigator.share) {
+                navigator.share({
+                    title: propertyData.name,
+                    text: `Check out this amazing virtual tour of ${propertyData.name}`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showNotification('Tour link copied to clipboard!');
+                });
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function showSettings() {
+            showNotification('Settings panel coming soon...');
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 120px;
+                right: 24px;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(212, 175, 55, 0.3);
+                border-radius: 12px;
+                padding: 16px 20px;
+                color: #d4af37;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 2000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initViewer);
+        // Populate property name immediately
+        // Populate property name immediately
+        (function () {
+            const p = new URLSearchParams(window.location.search);
+            const el = document.getElementById('property-name');
+            const n = p.get('name') ? decodeURIComponent(p.get('name')) : '';
+            if (el && n) el.textContent = n;
+        })();
+
+        function goBackToProperty() {
+            const params = new URLSearchParams(window.location.search);
+            const returnUrl = params.get('returnUrl');
+            if (returnUrl) {
+                window.location.href = decodeURIComponent(returnUrl);
+            } else if (document.referrer && document.referrer !== '') {
+                window.location.href = document.referrer;
+            } else {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+
+</html>

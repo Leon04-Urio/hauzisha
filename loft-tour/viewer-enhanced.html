@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOFT³ Virtual Tour - Enhanced Experience</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+        
+        #viewer-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* Premium Loading Screen */
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 32px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loading h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        #loading p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+        
+        /* Premium UI Overlay */
+        .tour-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .tour-ui > * {
+            pointer-events: auto;
+        }
+        
+        /* UI Toggle Button - Eye Icon */
+        .ui-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            z-index: 2500;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .ui-toggle-btn:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.4);
+            color: #d4af37;
+            transform: scale(1.05);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.6),
+                0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* UI Hidden State */
+        .tour-ui.ui-hidden .ui-element {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .tour-ui.ui-hidden .ui-toggle-btn {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+        
+        /* Smart Auto-Hide System */
+        .ui-element {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .ui-element.auto-hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95);
+        }
+        
+        .ui-element:hover {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: scale(1) !important;
+        }
+        
+        /* Enhanced Room Hotspots - Room Preview Pins */
+        .room-hotspot {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            cursor: pointer;
+            transform: translate(-50%, -100%);
+            z-index: 1500;
+            transition: all 0.3s ease;
+            animation: naturalBob 4s ease-in-out infinite;
+        }
+        
+        .room-hotspot:hover {
+            transform: translate(-50%, -100%) scale(1.1);
+            animation-play-state: paused;
+        }
+        
+        .hotspot-pin {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(212, 175, 55, 0.3);
+            background: #000;
+        }
+        
+        .hotspot-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid rgba(255, 255, 255, 0.9);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+        
+        .hotspot-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        
+        .room-hotspot:hover .hotspot-image {
+            transform: scale(1.05);
+        }
+        
+        .hotspot-label {
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: #d4af37;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .room-hotspot:hover .hotspot-label {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        @keyframes naturalBob {
+            0%, 100% { 
+                transform: translate(-50%, -100%) translateY(0px) rotate(0deg);
+            }
+            25% { 
+                transform: translate(-50%, -100%) translateY(-3px) rotate(0.5deg);
+            }
+            50% { 
+                transform: translate(-50%, -100%) translateY(-6px) rotate(0deg);
+            }
+            75% { 
+                transform: translate(-50%, -100%) translateY(-3px) rotate(-0.5deg);
+            }
+        }
+        
+        /* Bottom Info Panel - Fixed to Bottom Edge */
+        .bottom-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 
+                0 -8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin: 0;
+        }
+        
+        .scene-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .scene-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .scene-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .distance-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+        }
+        
+        .distance-info i {
+            color: #d4af37;
+            font-size: 12px;
+        }
+        
+        .distance-text {
+            font-size: 12px;
+            color: #d4af37;
+            font-weight: 500;
+        }
+        
+        /* Navigation Dots - Enhanced */
+        .nav-dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-dot.active {
+            background: #d4af37;
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+        }
+        
+        .nav-dot:hover {
+            background: rgba(212, 175, 55, 0.6);
+            transform: scale(1.2);
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .bottom-panel {
+                padding: 16px;
+            }
+            
+            .scene-title {
+                font-size: 18px;
+            }
+            
+            .ui-toggle-btn {
+                top: 16px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+            
+            .room-hotspot {
+                width: 60px;
+                height: 80px;
+            }
+            
+            .hotspot-pin {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <div id="loading">
+            <div class="spinner"></div>
+            <h2>Loading Enhanced Tour</h2>
+            <p>Preparing your premium experience...</p>
+        </div>
+        
+        <!-- Enhanced UI Overlay -->
+        <div class="tour-ui" id="tour-ui" style="display: none;">
+            <!-- UI Toggle Button -->
+            <div class="ui-toggle-btn" id="ui-toggle-btn" onclick="toggleUI()" title="Toggle UI Visibility">
+                <i class="fas fa-eye"></i>
+            </div>
+            
+            <!-- Enhanced Room Hotspots -->
+            <div class="room-hotspot" style="top: 50%; left: 85%;" onclick="nextScene()" data-room="living-room">
+                <div class="hotspot-pin">
+                    <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=200&h=200&fit=crop&crop=center" alt="Living Room" class="hotspot-image">
+                </div>
+                <div class="hotspot-label">Living Room</div>
+            </div>
+            
+            <div class="room-hotspot" style="top: 60%; left: 15%;" onclick="goToScene(2)" data-room="master-bedroom">
+                <div class="hotspot-pin">
+                    <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=200&h=200&fit=crop&crop=center" alt="Master Bedroom" class="hotspot-image">
+                </div>
+                <div class="hotspot-label">Master Bedroom</div>
+            </div>
+            
+            <div class="room-hotspot" style="top: 40%; left: 60%;" onclick="goToScene(3)" data-room="kitchen">
+                <div class="hotspot-pin">
+                    <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=200&fit=crop&crop=center" alt="Kitchen" class="hotspot-image">
+                </div>
+                <div class="hotspot-label">Modern Kitchen</div>
+            </div>
+            
+            <!-- Bottom Info Panel -->
+            <div class="bottom-panel ui-element fade-in">
+                <div class="scene-info">
+                    <div>
+                        <div class="scene-title" id="scene-title">Enhanced Tour Experience</div>
+                        <div class="scene-subtitle" id="scene-subtitle">Premium quality with elegant hotspots</div>
+                    </div>
+                    <div class="distance-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="distance-text" id="distance-text">0m from entrance</span>
+                    </div>
+                </div>
+                
+                <!-- Navigation Dots -->
+                <div class="nav-dots" id="nav-dots">
+                    <div class="nav-dot active" onclick="goToScene(0)"></div>
+                    <div class="nav-dot" onclick="goToScene(1)"></div>
+                    <div class="nav-dot" onclick="goToScene(2)"></div>
+                    <div class="nav-dot" onclick="goToScene(3)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marzipano for Panorama Rendering -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <script>
+        console.log('🚀 Starting enhanced viewer...');
+        
+        // Global state
+        let uiVisible = true;
+        let currentSceneIndex = 0;
+        
+        // Property data
+        const propertyData = {
+            name: "Enhanced Luxury Experience",
+            location: "Premium Virtual Tour",
+            scenes: [
+                {
+                    id: 0,
+                    title: "Grand Entrance",
+                    subtitle: "Enhanced quality with elegant hotspots",
+                    distanceFromEntrance: 0
+                },
+                {
+                    id: 1,
+                    title: "Living Room",
+                    subtitle: "Spacious and bright",
+                    distanceFromEntrance: 12
+                },
+                {
+                    id: 2,
+                    title: "Master Bedroom",
+                    subtitle: "Peaceful retreat",
+                    distanceFromEntrance: 25
+                },
+                {
+                    id: 3,
+                    title: "Modern Kitchen",
+                    subtitle: "Chef's paradise",
+                    distanceFromEntrance: 18
+                }
+            ]
+        };
+        
+        // Wait for Marzipano to load
+        function waitForMarzipano() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const check = () => {
+                    if (typeof Marzipano !== 'undefined') {
+                        console.log('✅ Marzipano loaded');
+                        resolve();
+                    } else if (attempts > 50) {
+                        reject(new Error('Marzipano failed to load'));
+                    } else {
+                        attempts++;
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        }
+        
+        async function initViewer() {
+            try {
+                await waitForMarzipano();
+                
+                // Hide loading and show UI
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('tour-ui').style.display = 'block';
+                    
+                    // Initialize hotspot parallax
+                    initHotspotParallax();
+                    
+                    showNotification('Enhanced tour loaded! Click the eye icon to toggle UI visibility.');
+                }, 1500);
+                
+                // Create Marzipano viewer with enhanced quality
+                const container = document.getElementById('viewer-container');
+                
+                const viewer = new Marzipano.Viewer(container, {
+                    controls: {
+                        mouseViewMode: 'drag'
+                    }
+                });
+                
+                console.log('✅ Enhanced Marzipano viewer created');
+                
+                // Load the image with higher quality settings
+                const imageUrl = './test-panorama.jpg';
+                console.log('🖼️ Loading high-quality image:', imageUrl);
+                
+                // Enhanced geometry with higher quality levels
+                const geometry = new Marzipano.EquirectGeometry([
+                    { width: 8192 },
+                    { width: 4096 },
+                    { width: 2048 },
+                    { width: 1024 }
+                ]);
+                
+                // Enhanced view limits for better quality
+                const limiter = Marzipano.RectilinearView.limit.traditional(4096, 120*Math.PI/180);
+                const view = new Marzipano.RectilinearView({ 
+                    fov: Math.PI/3.5  // Slightly tighter FOV for better quality
+                }, limiter);
+                
+                // Create source and scene
+                const source = Marzipano.ImageUrlSource.fromString(imageUrl);
+                const scene = viewer.createScene({
+                    source: source,
+                    geometry: geometry,
+                    view: view,
+                    pinFirstLevel: true
+                });
+                
+                console.log('✅ Enhanced scene created');
+                
+                // Switch to scene
+                scene.switchTo();
+                
+                console.log('✅ Enhanced tour ready!');
+                
+                // Store viewer globally
+                window.marzipanoViewer = viewer;
+                window.currentScene = scene;
+                
+                // Setup parallax for hotspots
+                setupHotspotParallax();
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize enhanced viewer:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="spinner"></div>
+                    <h2>Connection Error</h2>
+                    <p>Unable to load the enhanced tour. Please check your connection.</p>
+                `;
+            }
+        }
+        
+        function initHotspotParallax() {
+            // Initialize parallax elements
+            const hotspots = document.querySelectorAll('.room-hotspot');
+            console.log('🎯 Initialized', hotspots.length, 'hotspots with parallax');
+        }
+        
+        function setupHotspotParallax() {
+            if (!window.currentScene) return;
+            
+            // Listen for view changes to update hotspot parallax
+            const view = window.currentScene.view();
+            view.addEventListener('change', updateHotspotParallax);
+            
+            console.log('🎯 Hotspot parallax system active');
+        }
+        
+        function updateHotspotParallax() {
+            if (!window.currentScene) return;
+            
+            try {
+                const view = window.currentScene.view();
+                const yaw = view.yaw();
+                const pitch = view.pitch();
+                
+                // Update room hotspots with natural bobbing motion
+                const hotspots = document.querySelectorAll('.room-hotspot');
+                hotspots.forEach((hotspot, index) => {
+                    const multiplier = 0.3 + (index * 0.1); // Different multipliers for variety
+                    const translateX = yaw * multiplier * 8;
+                    const translateY = pitch * multiplier * 4;
+                    
+                    // Apply parallax while preserving natural bobbing animation
+                    hotspot.style.setProperty('--parallax-x', `${translateX}px`);
+                    hotspot.style.setProperty('--parallax-y', `${translateY}px`);
+                });
+            } catch (error) {
+                // Silently handle if view not ready
+            }
+        }
+        
+        function toggleUI() {
+            uiVisible = !uiVisible;
+            const tourUI = document.getElementById('tour-ui');
+            const toggleBtn = document.getElementById('ui-toggle-btn');
+            const toggleIcon = toggleBtn.querySelector('i');
+            
+            if (uiVisible) {
+                tourUI.classList.remove('ui-hidden');
+                toggleIcon.className = 'fas fa-eye';
+                toggleBtn.setAttribute('title', 'Hide UI');
+                showNotification('UI elements shown');
+            } else {
+                tourUI.classList.add('ui-hidden');
+                toggleIcon.className = 'fas fa-eye-slash';
+                toggleBtn.setAttribute('title', 'Show UI');
+                showNotification('UI elements hidden - Click eye icon to show');
+            }
+        }
+        
+        function goToScene(index) {
+            if (index >= 0 && index < propertyData.scenes.length) {
+                currentSceneIndex = index;
+                const scene = propertyData.scenes[index];
+                
+                // Update scene info
+                document.getElementById('scene-title').textContent = scene.title;
+                document.getElementById('scene-subtitle').textContent = scene.subtitle;
+                document.getElementById('distance-text').textContent = `${scene.distanceFromEntrance}m from entrance`;
+                
+                // Update active dot
+                document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                
+                // Add smooth transition effect
+                const bottomPanel = document.querySelector('.bottom-panel');
+                bottomPanel.style.transform = 'translateY(10px)';
+                bottomPanel.style.opacity = '0.8';
+                setTimeout(() => {
+                    bottomPanel.style.transform = 'translateY(0)';
+                    bottomPanel.style.opacity = '1';
+                }, 200);
+                
+                showNotification(`Navigated to ${scene.title}`);
+            }
+        }
+        
+        function nextScene() {
+            const newIndex = currentSceneIndex < propertyData.scenes.length - 1 ? currentSceneIndex + 1 : 0;
+            goToScene(newIndex);
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 24px;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(212, 175, 55, 0.3);
+                border-radius: 12px;
+                padding: 16px 20px;
+                color: #d4af37;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 2000;
+                animation: slideIn 0.3s ease-out;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add CSS for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            
+            /* Enhanced hotspot parallax */
+            .room-hotspot {
+                transform: translate(-50%, -100%) 
+                          translate(var(--parallax-x, 0px), var(--parallax-y, 0px));
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initViewer);
+    </script>
+</body>
+</html>

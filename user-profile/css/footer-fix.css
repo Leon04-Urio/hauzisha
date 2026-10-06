@@ -1,0 +1,33 @@
+/* Footer fix for user-profile pages */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.user-main-content, main {
+    flex: 1 0 auto;
+}
+
+footer, .site-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* Ensure content doesn't overlap with footer */
+.user-main-content {
+    padding-bottom: 2rem;
+}
+
+/* Mobile bottom nav spacing */
+@media (max-width: 768px) {
+    .user-main-content {
+        padding-bottom: 80px; /* Space for mobile nav */
+    }
+}

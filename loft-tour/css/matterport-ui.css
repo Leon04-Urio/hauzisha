@@ -1,0 +1,1237 @@
+/**
+ * LOFT³ Matterport-Style UI
+ * Minimal, modern interface with auto-hiding elements
+ */
+
+/* ===== CSS CUSTOM PROPERTIES ===== */
+:root {
+    --primary: #FFD700;
+    --secondary: #6C757D;
+    --success: #10B981;
+    --danger: #EF4444;
+    --dark: #0F172A;
+    --dark-light: #1E293B;
+    --gray: #64748B;
+    --gray-light: #CBD5E1;
+    --white: #FFFFFF;
+    --bg: #0A0E1A;
+    --bg-card: #141824;
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== MATTERPORT UI CONTAINER ===== */
+.matterport-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.matterport-ui.ui-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.matterport-ui.ui-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.matterport-ui.ui-hidden .matterport-top-bar,
+.matterport-ui.ui-hidden .matterport-navigation,
+.matterport-ui.ui-hidden .distance-overlay,
+.matterport-ui.ui-hidden .progress-indicator {
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.matterport-ui.ui-hidden .matterport-navigation {
+    transform: translateY(20px);
+}
+
+/* ===== TOP BAR ===== */
+.matterport-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 24px 32px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.room-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.room-label {
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s ease;
+}
+
+.room-subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s ease;
+}
+
+.floor-label {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s ease;
+}
+
+.tour-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ui-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.ui-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.ui-btn:active {
+    transform: scale(0.95);
+}
+
+/* ===== DISTANCE OVERLAY ===== */
+.distance-overlay {
+    position: absolute;
+    top: 120px;
+    left: 32px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px 20px;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.distance-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.distance-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Icon animation for different states */
+.distance-icon.entrance {
+    background: linear-gradient(135deg, #10B981, #059669);
+    animation: entrancePulse 2s infinite;
+}
+
+.distance-icon.middle {
+    background: linear-gradient(135deg, var(--primary), #f59e0b);
+}
+
+.distance-icon.end {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    animation: endGlow 1.5s infinite alternate;
+}
+
+.distance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.distance-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.distance-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+/* Distance milestone colors */
+.distance-value.near {
+    color: #10B981; /* Green for near entrance */
+}
+
+.distance-value.medium {
+    color: var(--primary); /* Gold for medium distance */
+}
+
+.distance-value.far {
+    color: #F59E0B; /* Orange for far from entrance */
+}
+
+/* Distance animations */
+@keyframes entrancePulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes endGlow {
+    0% { 
+        box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+    }
+    100% { 
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+    }
+}
+
+/* ===== PROGRESS INDICATOR ===== */
+.progress-indicator {
+    position: absolute;
+    top: 120px;
+    right: 32px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px 20px;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 140px;
+}
+
+.progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 0.5s ease, background 0.3s ease;
+    width: 0%;
+    position: relative;
+}
+
+/* Progress milestone animations */
+.progress-fill.progress-quarter::after,
+.progress-fill.progress-half::after,
+.progress-fill.progress-three-quarter::after,
+.progress-fill.progress-complete::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    animation: progressPulse 0.5s ease;
+}
+
+.progress-fill.progress-complete {
+    animation: progressComplete 0.8s ease;
+}
+
+.progress-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.time-estimate {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 4px;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Progress animations */
+@keyframes progressPulse {
+    0% { opacity: 0; transform: scaleY(0.5); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+    100% { opacity: 0.8; transform: scaleY(1); }
+}
+
+@keyframes progressComplete {
+    0% { box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+    100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); }
+}
+
+/* ===== NAVIGATION CONTROLS ===== */
+.matterport-navigation {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.nav-control {
+    width: 56px;
+    height: 56px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+.nav-control:hover:not(.disabled) {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.nav-control:active:not(.disabled) {
+    transform: scale(0.95);
+}
+
+.nav-control.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.nav-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 200px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.nav-dots::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-dot {
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.nav-dot:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(1.2);
+}
+
+.nav-dot.active {
+    background: var(--primary);
+    width: 24px;
+    border-radius: 6px;
+}
+
+/* ===== ROOM LABELS OVERLAY ===== */
+.room-labels-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.room-labels-overlay.labels-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.room-labels-overlay.labels-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.room-label-marker {
+    position: absolute;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: fadeInLabel 0.5s ease;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.room-label-marker:hover {
+    transform: scale(1.1);
+}
+
+.room-labels-overlay.labels-hidden .room-label-marker {
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.label-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+
+.label-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.room-labels-overlay.labels-hidden .label-dot::after {
+    animation: none;
+    opacity: 0;
+}
+
+.label-text {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.room-label-marker:hover .label-text {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+/* Enhanced label animations for different states */
+.room-label-marker.label-highlight {
+    animation: labelHighlight 1s ease;
+}
+
+.room-label-marker.label-fade-in {
+    animation: labelFadeIn 0.6s ease forwards;
+}
+
+.room-label-marker.label-fade-out {
+    animation: labelFadeOut 0.4s ease forwards;
+}
+
+/* ===== UI TOGGLE ===== */
+.ui-toggle-container {
+    position: absolute;
+    bottom: 40px;
+    right: 32px;
+    pointer-events: auto;
+}
+
+.ui-toggle {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.ui-toggle:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+/* ===== LOADING OVERLAY ===== */
+.matterport-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 200;
+}
+
+.matterport-loading.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-content {
+    text-align: center;
+    color: white;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+.loading-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== NOTIFICATIONS ===== */
+.matterport-notification {
+    position: absolute;
+    top: 200px;
+    right: 32px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideInRight 0.3s ease;
+    pointer-events: auto;
+    z-index: 150;
+}
+
+.matterport-notification.info {
+    border-left: 4px solid var(--primary);
+}
+
+.matterport-notification.success {
+    border-left: 4px solid #10B981;
+}
+
+.matterport-notification.warning {
+    border-left: 4px solid #F59E0B;
+}
+
+.matterport-notification.error {
+    border-left: 4px solid #EF4444;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@keyframes fadeInLabel {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes labelFadeIn {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.6) translateY(10px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+@keyframes labelFadeOut {
+    0% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: scale(0.6) translateY(-10px); 
+    }
+}
+
+@keyframes labelHighlight {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); 
+    }
+    50% { 
+        transform: scale(1.2); 
+        box-shadow: 0 4px 16px rgba(255, 215, 0, 0.5); 
+    }
+}
+
+@keyframes slideInRight {
+    0% { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+    .matterport-top-bar {
+        padding: 20px 24px;
+    }
+    
+    .room-label {
+        font-size: 20px;
+    }
+    
+    .distance-overlay,
+    .progress-indicator {
+        top: 100px;
+    }
+    
+    .distance-overlay {
+        left: 24px;
+    }
+    
+    .progress-indicator {
+        right: 24px;
+    }
+    
+    .matterport-navigation {
+        bottom: 32px;
+        gap: 20px;
+    }
+    
+    .nav-control {
+        width: 52px;
+        height: 52px;
+        font-size: 16px;
+    }
+    
+    .ui-toggle-container {
+        bottom: 32px;
+        right: 24px;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .matterport-top-bar {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .room-info {
+        width: 100%;
+    }
+    
+    .room-label {
+        font-size: 18px;
+    }
+    
+    .room-subtitle {
+        font-size: 13px;
+    }
+    
+    .tour-actions {
+        align-self: flex-end;
+        position: absolute;
+        top: 16px;
+        right: 20px;
+    }
+    
+    .ui-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .distance-overlay {
+        top: 80px;
+        left: 20px;
+        padding: 12px 16px;
+    }
+    
+    .distance-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .distance-value {
+        font-size: 16px;
+    }
+    
+    .progress-indicator {
+        top: 80px;
+        right: 20px;
+        padding: 12px 16px;
+        min-width: 120px;
+    }
+    
+    .matterport-navigation {
+        bottom: 24px;
+        gap: 16px;
+        padding: 0 20px;
+        max-width: calc(100vw - 40px);
+    }
+    
+    .nav-control {
+        width: 48px;
+        height: 48px;
+        font-size: 14px;
+    }
+    
+    .nav-dots {
+        max-width: 120px;
+    }
+    
+    .nav-dot {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .nav-dot.active {
+        width: 20px;
+    }
+    
+    .ui-toggle-container {
+        bottom: 24px;
+        right: 20px;
+    }
+    
+    .ui-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .matterport-notification {
+        top: 160px;
+        right: 20px;
+        left: 20px;
+        font-size: 13px;
+    }
+    
+    .room-label-marker .label-text {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+}
+
+/* Mobile Landscape */
+@media (max-width: 768px) and (orientation: landscape) {
+    .matterport-top-bar {
+        padding: 12px 20px;
+    }
+    
+    .room-label {
+        font-size: 16px;
+    }
+    
+    .room-subtitle {
+        font-size: 12px;
+    }
+    
+    .distance-overlay,
+    .progress-indicator {
+        top: 60px;
+        padding: 10px 14px;
+    }
+    
+    .distance-value {
+        font-size: 14px;
+    }
+    
+    .matterport-navigation {
+        bottom: 16px;
+    }
+    
+    .nav-control {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .ui-toggle-container {
+        bottom: 16px;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .ui-btn,
+    .nav-control,
+    .nav-dot,
+    .ui-toggle {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .ui-btn:hover,
+    .nav-control:hover,
+    .ui-toggle:hover {
+        transform: none;
+    }
+    
+    .ui-btn:active,
+    .nav-control:active,
+    .ui-toggle:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    
+    .nav-dot:hover {
+        transform: none;
+    }
+    
+    .nav-dot:active {
+        transform: scale(0.9);
+    }
+    
+    .room-label-marker:hover .label-text {
+        opacity: 0;
+    }
+    
+    .room-label-marker:active .label-text {
+        opacity: 1;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .ui-btn,
+    .nav-control,
+    .ui-toggle {
+        border: 2px solid white;
+    }
+    
+    .nav-dot {
+        border: 1px solid white;
+    }
+    
+    .distance-overlay,
+    .progress-indicator,
+    .matterport-notification {
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .matterport-ui,
+    .ui-btn,
+    .nav-control,
+    .nav-dot,
+    .ui-toggle,
+    .distance-overlay,
+    .progress-indicator,
+    .progress-fill,
+    .loading-spinner {
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    .label-dot::after {
+        animation: none !important;
+    }
+}
+
+/* iOS Safari Safe Area */
+@supports (padding: max(0px)) {
+    .matterport-top-bar {
+        padding-top: max(24px, env(safe-area-inset-top));
+        padding-left: max(32px, env(safe-area-inset-left));
+        padding-right: max(32px, env(safe-area-inset-right));
+    }
+    
+    .matterport-navigation {
+        bottom: max(40px, env(safe-area-inset-bottom));
+    }
+    
+    .ui-toggle-container {
+        bottom: max(40px, env(safe-area-inset-bottom));
+        right: max(32px, env(safe-area-inset-right));
+    }
+    
+    .distance-overlay {
+        left: max(32px, env(safe-area-inset-left));
+    }
+    
+    .progress-indicator {
+        right: max(32px, env(safe-area-inset-right));
+    }
+    
+    @media (max-width: 768px) {
+        .matterport-top-bar {
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+        }
+        
+        .matterport-navigation {
+            bottom: max(24px, env(safe-area-inset-bottom));
+        }
+        
+        .ui-toggle-container {
+            bottom: max(24px, env(safe-area-inset-bottom));
+            right: max(20px, env(safe-area-inset-right));
+        }
+        
+        .distance-overlay {
+            left: max(20px, env(safe-area-inset-left));
+        }
+        
+        .progress-indicator {
+            right: max(20px, env(safe-area-inset-right));
+        }
+    }
+}
+/* ==
+=== FULLSCREEN MODE STYLES ===== */
+
+/* Fullscreen UI container adjustments */
+.matterport-ui.fullscreen-mode {
+    z-index: 10000;
+}
+
+.matterport-ui.fullscreen-mode .matterport-top-bar {
+    padding: 2rem 3rem;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 80%, transparent 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.matterport-ui.fullscreen-mode .room-label {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.matterport-ui.fullscreen-mode .room-subtitle {
+    font-size: 16px;
+}
+
+.matterport-ui.fullscreen-mode .floor-label {
+    font-size: 14px;
+}
+
+/* Fullscreen navigation adjustments */
+.matterport-ui.fullscreen-mode .matterport-navigation {
+    bottom: 4rem;
+    gap: 3rem;
+}
+
+.matterport-ui.fullscreen-mode .nav-control {
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.matterport-ui.fullscreen-mode .nav-dot {
+    width: 12px;
+    height: 12px;
+}
+
+.matterport-ui.fullscreen-mode .nav-dot.active {
+    width: 32px;
+    border-radius: 6px;
+}
+
+/* Fullscreen distance overlay adjustments */
+.matterport-ui.fullscreen-mode .distance-overlay {
+    top: 6rem;
+    left: 3rem;
+    padding: 1.5rem 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.matterport-ui.fullscreen-mode .distance-text {
+    font-size: 14px;
+}
+
+.matterport-ui.fullscreen-mode .distance-value {
+    font-size: 20px;
+}
+
+/* Fullscreen progress indicator adjustments */
+.matterport-ui.fullscreen-mode .progress-indicator {
+    bottom: 8rem;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.matterport-ui.fullscreen-mode .progress-track {
+    height: 6px;
+}
+
+.matterport-ui.fullscreen-mode .progress-text {
+    font-size: 14px;
+}
+
+/* Fullscreen UI buttons */
+.matterport-ui.fullscreen-mode .ui-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.matterport-ui.fullscreen-mode .tour-actions {
+    gap: 1rem;
+}
+
+/* Fullscreen loading overlay */
+.matterport-ui.fullscreen-mode .matterport-loading {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.matterport-ui.fullscreen-mode .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 4px;
+}
+
+.matterport-ui.fullscreen-mode .loading-text {
+    font-size: 18px;
+    margin-top: 2rem;
+}
+
+/* Fullscreen mobile optimizations */
+@media (max-width: 768px) {
+    .matterport-ui.fullscreen-mode .matterport-top-bar {
+        padding: 1rem 1.5rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .room-label {
+        font-size: 20px;
+    }
+    
+    .matterport-ui.fullscreen-mode .room-subtitle {
+        font-size: 12px;
+    }
+    
+    .matterport-ui.fullscreen-mode .matterport-navigation {
+        bottom: 2rem;
+        gap: 1.5rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .nav-control {
+        width: 52px;
+        height: 52px;
+        font-size: 16px;
+    }
+    
+    .matterport-ui.fullscreen-mode .distance-overlay {
+        top: 4rem;
+        left: 1.5rem;
+        padding: 1rem 1.5rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .distance-text {
+        font-size: 12px;
+    }
+    
+    .matterport-ui.fullscreen-mode .distance-value {
+        font-size: 16px;
+    }
+    
+    .matterport-ui.fullscreen-mode .progress-indicator {
+        bottom: 6rem;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .ui-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+}
+
+/* Fullscreen landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    .matterport-ui.fullscreen-mode .matterport-top-bar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .room-label {
+        font-size: 16px;
+    }
+    
+    .matterport-ui.fullscreen-mode .room-subtitle {
+        font-size: 10px;
+    }
+    
+    .matterport-ui.fullscreen-mode .matterport-navigation {
+        bottom: 1rem;
+        gap: 1rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .nav-control {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .matterport-ui.fullscreen-mode .distance-overlay {
+        top: 2.5rem;
+        left: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .progress-indicator {
+        bottom: 4rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .matterport-ui.fullscreen-mode .ui-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+}
+
+/* Fullscreen transition animations */
+.matterport-ui.fullscreen-mode .matterport-top-bar,
+.matterport-ui.fullscreen-mode .matterport-navigation,
+.matterport-ui.fullscreen-mode .distance-overlay,
+.matterport-ui.fullscreen-mode .progress-indicator {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fullscreen accessibility improvements */
+.matterport-ui.fullscreen-mode .ui-btn:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.matterport-ui.fullscreen-mode .nav-control:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Fullscreen reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .matterport-ui.fullscreen-mode .matterport-top-bar,
+    .matterport-ui.fullscreen-mode .matterport-navigation,
+    .matterport-ui.fullscreen-mode .distance-overlay,
+    .matterport-ui.fullscreen-mode .progress-indicator {
+        transition: none;
+    }
+}

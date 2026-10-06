@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOFT³ On-Site Capture</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .capture-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .capture-header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .property-info h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .property-info p {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .capture-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .capture-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Floor Navigation */
+        .floor-nav {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            border-bottom: 1px solid #333;
+        }
+
+        .floor-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .floor-btn.active {
+            background: #ffd700;
+            color: #000;
+            border-color: #ffd700;
+        }
+
+        .floor-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Room Grid */
+        .room-grid {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .room-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .room-card:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .room-card.captured {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #ffd700;
+        }
+
+        .room-card.captured::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ffd700;
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .room-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .room-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .room-status {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Camera Interface */
+        .camera-interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .camera-header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .camera-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .camera-info p {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .camera-preview {
+            flex: 1;
+            position: relative;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        .camera-controls {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .capture-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #ffd700;
+            border: 4px solid #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ffd700;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Generate Tour Button */
+        .generate-tour {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffd700;
+            color: #000;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .generate-tour:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Validation Modal */
+        .validation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .validation-content {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .validation-icon {
+            font-size: 3rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .validation-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .validation-message {
+            color: #999;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .validation-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .room-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .room-card {
+                padding: 15px;
+                min-height: 100px;
+            }
+
+            .room-icon {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="../js/toast.js"></script>
+    <div class="capture-container">
+        <!-- Header -->
+        <div class="capture-header">
+            <div class="property-info">
+                <h2 id="propertyName">Nova Palace</h2>
+                <p id="propertyAddress">Westlands, Nairobi</p>
+            </div>
+            <div class="capture-status">
+                <div class="status-indicator"></div>
+                <span>On-Site</span>
+            </div>
+        </div>
+
+        <!-- Floor Navigation -->
+        <div class="floor-nav">
+            <button class="floor-btn active" data-floor="1">Floor 1</button>
+            <button class="floor-btn" data-floor="2">Floor 2</button>
+            <button class="floor-btn" data-floor="basement">Basement</button>
+            <button class="floor-btn" data-floor="outdoor">Outdoor</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="capture-main">
+            <!-- Room Grid -->
+            <div class="room-grid" id="roomGrid">
+                <!-- Rooms will be populated by JavaScript -->
+            </div>
+
+            <!-- Progress Container -->
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span class="progress-text" id="progressText">0 of 12 rooms captured</span>
+                    <span class="progress-text" id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Tour Button -->
+        <button class="generate-tour" id="generateTour">
+            <i class="fas fa-magic"></i>
+            Generate Tour
+        </button>
+    </div>
+
+    <!-- Camera Interface -->
+    <div class="camera-interface" id="cameraInterface">
+        <div class="camera-header">
+            <div class="camera-info">
+                <h3 id="currentRoom">Living Room</h3>
+                <p id="currentFloor">Floor 1</p>
+            </div>
+            <button class="control-btn" id="closeCamera">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="camera-preview">
+            <video class="camera-video" id="cameraVideo" autoplay playsinline></video>
+            <div class="camera-overlay"></div>
+        </div>
+
+        <div class="camera-controls">
+            <button class="control-btn" id="switchCamera">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="capture-btn" id="captureBtn">
+                <i class="fas fa-camera"></i>
+            </button>
+            <button class="control-btn" id="flashToggle">
+                <i class="fas fa-bolt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Validation Modal -->
+    <div class="validation-modal" id="validationModal">
+        <div class="validation-content">
+            <div class="validation-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="validation-title">Image Captured!</h3>
+            <p class="validation-message">Panorama validated and saved for <span id="validatedRoom"></span></p>
+            <div class="validation-actions">
+                <button class="btn btn-primary" id="continueCapture">Continue</button>
+                <button class="btn btn-secondary" id="retakePhoto">Retake</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Room configurations by floor
+        const floorRooms = {
+            1: [
+                { name: 'Entrance', icon: 'fa-door-open', captured: false },
+                { name: 'Living Room', icon: 'fa-couch', captured: false },
+                { name: 'Kitchen', icon: 'fa-utensils', captured: false },
+                { name: 'Dining Room', icon: 'fa-table', captured: false },
+                { name: 'Guest Bathroom', icon: 'fa-bath', captured: false },
+                { name: 'Hallway', icon: 'fa-arrows-alt-h', captured: false }
+            ],
+            2: [
+                { name: 'Master Bedroom', icon: 'fa-bed', captured: false },
+                { name: 'Master Bathroom', icon: 'fa-shower', captured: false },
+                { name: 'Bedroom 2', icon: 'fa-bed', captured: false },
+                { name: 'Bedroom 3', icon: 'fa-bed', captured: false },
+                { name: 'Shared Bathroom', icon: 'fa-bath', captured: false },
+                { name: 'Balcony', icon: 'fa-tree', captured: false }
+            ],
+            basement: [
+                { name: 'Storage', icon: 'fa-boxes', captured: false },
+                { name: 'Laundry', icon: 'fa-tshirt', captured: false },
+                { name: 'Utility Room', icon: 'fa-tools', captured: false }
+            ],
+            outdoor: [
+                { name: 'Front Yard', icon: 'fa-seedling', captured: false },
+                { name: 'Back Yard', icon: 'fa-tree', captured: false },
+                { name: 'Parking', icon: 'fa-car', captured: false }
+            ]
+        };
+
+        let currentFloor = '1';
+        let currentRoom = null;
+        let cameraStream = null;
+        let capturedImages = {};
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            renderRooms();
+            setupEventListeners();
+            updateProgress();
+        });
+
+        function renderRooms() {
+            const roomGrid = document.getElementById('roomGrid');
+            const rooms = floorRooms[currentFloor];
+            
+            roomGrid.innerHTML = rooms.map(room => `
+                <div class="room-card ${room.captured ? 'captured' : ''}" data-room="${room.name}">
+                    <div class="room-icon">
+                        <i class="fas ${room.icon}"></i>
+                    </div>
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-status">
+                        ${room.captured ? 'Captured' : 'Tap to capture'}
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click listeners to room cards
+            document.querySelectorAll('.room-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const roomName = this.dataset.room;
+                    openCamera(roomName);
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            // Floor navigation
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFloor = this.dataset.floor;
+                    renderRooms();
+                });
+            });
+
+            // Camera controls
+            document.getElementById('closeCamera').addEventListener('click', closeCamera);
+            document.getElementById('captureBtn').addEventListener('click', captureImage);
+            document.getElementById('switchCamera').addEventListener('click', switchCamera);
+            document.getElementById('continueCapture').addEventListener('click', closeValidation);
+            document.getElementById('retakePhoto').addEventListener('click', retakePhoto);
+            document.getElementById('generateTour').addEventListener('click', generateTour);
+        }
+
+        async function openCamera(roomName) {
+            currentRoom = roomName;
+            document.getElementById('currentRoom').textContent = roomName;
+            document.getElementById('currentFloor').textContent = `Floor ${currentFloor}`;
+            
+            // Check for 360 camera connection first
+            if (await check360CameraConnection()) {
+                // Use 360 camera interface
+                setup360CameraInterface();
+            } else {
+                // Fallback to phone camera or show connection instructions
+                showCameraConnectionOptions();
+            }
+        }
+
+        async function check360CameraConnection() {
+            try {
+                // Check for Insta360 camera via WebUSB or WiFi
+                if ('usb' in navigator) {
+                    const devices = await navigator.usb.getDevices();
+                    const insta360Device = devices.find(device => 
+                        device.vendorId === 0x2e3a || // Insta360 vendor ID
+                        device.productName?.toLowerCase().includes('insta360')
+                    );
+                    if (insta360Device) return true;
+                }
+                
+                // Check for WiFi connection to camera
+                if (await checkWiFiCameraConnection()) {
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.log('360 camera check failed:', error);
+                return false;
+            }
+        }
+
+        async function checkWiFiCameraConnection() {
+            try {
+                // Try to connect to common Insta360 camera IP addresses
+                const cameraIPs = ['192.168.42.1', '192.168.1.254', '10.0.0.1'];
+                
+                for (const ip of cameraIPs) {
+                    try {
+                        const response = await fetch(`http://${ip}/osc/info`, {
+                            method: 'GET',
+                            timeout: 2000
+                        });
+                        if (response.ok) {
+                            const info = await response.json();
+                            if (info.manufacturer?.toLowerCase().includes('insta360')) {
+                                window.cameraIP = ip;
+                                return true;
+                            }
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                return false;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function setup360CameraInterface() {
+            // Update UI for 360 camera
+            document.getElementById('cameraInterface').style.display = 'flex';
+            
+            // Hide regular video preview, show 360 camera controls
+            const cameraPreview = document.querySelector('.camera-preview');
+            cameraPreview.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #fff;">
+                    <div style="font-size: 4rem; color: #ffd700; margin-bottom: 20px;">
+                        <i class="fas fa-camera-retro"></i>
+                    </div>
+                    <h3 style="margin-bottom: 10px;">Insta360 X5 Connected</h3>
+                    <p style="color: #999; text-align: center; margin-bottom: 20px;">
+                        Position camera in center of room<br>
+                        Ensure 360° view is unobstructed
+                    </p>
+                    <div id="cameraStatus" style="display: flex; align-items: center; gap: 10px; color: #ffd700;">
+                        <div class="status-indicator"></div>
+                        <span>Ready to capture</span>
+                    </div>
+                </div>
+            `;
+            
+            // Update capture button for 360 mode
+            const captureBtn = document.getElementById('captureBtn');
+            captureBtn.innerHTML = '<i class="fas fa-circle"></i>';
+            captureBtn.style.background = '#ff4444';
+        }
+
+        function showCameraConnectionOptions() {
+            document.getElementById('cameraInterface').style.display = 'flex';
+            
+            const cameraPreview = document.querySelector('.camera-preview');
+            cameraPreview.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #fff; padding: 20px;">
+                    <div style="font-size: 3rem; color: #ffd700; margin-bottom: 20px;">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <h3 style="margin-bottom: 15px;">Connect Your 360° Camera</h3>
+                    
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; width: 100%; max-width: 300px;">
+                        <h4 style="color: #ffd700; margin-bottom: 10px;">
+                            <i class="fas fa-wifi"></i> WiFi Connection
+                        </h4>
+                        <p style="font-size: 0.9rem; color: #ccc; line-height: 1.4;">
+                            1. Turn on Insta360 X5<br>
+                            2. Enable WiFi on camera<br>
+                            3. Connect phone to camera's WiFi<br>
+                            4. Return to this app
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; width: 100%; max-width: 300px;">
+                        <h4 style="color: #ffd700; margin-bottom: 10px;">
+                            <i class="fas fa-usb"></i> USB-C Connection
+                        </h4>
+                        <p style="font-size: 0.9rem; color: #ccc; line-height: 1.4;">
+                            1. Connect camera via USB-C<br>
+                            2. Enable USB debugging<br>
+                            3. Grant camera permissions<br>
+                            4. Tap retry below
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button onclick="retryConnection()" style="background: #ffd700; color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">
+                            <i class="fas fa-sync"></i> Retry Connection
+                        </button>
+                        <button onclick="usePhoneCamera()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #333; padding: 12px 20px; border-radius: 8px;">
+                            Use Phone Camera
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function retryConnection() {
+            const statusDiv = document.querySelector('#cameraStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            }
+            
+            if (await check360CameraConnection()) {
+                setup360CameraInterface();
+            } else {
+                showCameraConnectionOptions();
+            }
+        }
+
+        async function usePhoneCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                
+                document.getElementById('cameraVideo').srcObject = cameraStream;
+                
+                // Reset camera preview to video mode
+                const cameraPreview = document.querySelector('.camera-preview');
+                cameraPreview.innerHTML = `
+                    <video class="camera-video" id="cameraVideo" autoplay playsinline></video>
+                    <div class="camera-overlay"></div>
+                `;
+                document.getElementById('cameraVideo').srcObject = cameraStream;
+                
+                // Reset capture button
+                const captureBtn = document.getElementById('captureBtn');
+                captureBtn.innerHTML = '<i class="fas fa-camera"></i>';
+                captureBtn.style.background = '#ffd700';
+                
+            } catch (error) {
+                console.error('Phone camera access denied:', error);
+                showToast('Camera access is required for capturing panoramas', 'error');
+            }
+        }
+
+        function closeCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraInterface').style.display = 'none';
+        }
+
+        async function captureImage() {
+            const captureBtn = document.getElementById('captureBtn');
+            
+            // Check if we're using 360 camera
+            if (window.cameraIP || captureBtn.style.background === 'rgb(255, 68, 68)') {
+                await capture360Image();
+            } else {
+                capturePhoneImage();
+            }
+        }
+
+        async function capture360Image() {
+            const captureBtn = document.getElementById('captureBtn');
+            const statusDiv = document.querySelector('#cameraStatus');
+            
+            // Show capturing state
+            captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            captureBtn.disabled = true;
+            
+            if (statusDiv) {
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Capturing 360° image...';
+            }
+            
+            try {
+                // Send capture command to Insta360 camera
+                const response = await fetch(`http://${window.cameraIP}/osc/commands/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'camera.takePicture'
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Wait for image to be ready
+                    await waitForImageReady(result.id);
+                    
+                    // Download the captured image
+                    const imageBlob = await download360Image(result.id);
+                    
+                    if (imageBlob) {
+                        validateAndSaveImage(imageBlob, currentRoom, currentFloor);
+                    }
+                } else {
+                    throw new Error('Failed to capture 360° image');
+                }
+            } catch (error) {
+                console.error('360° capture failed:', error);
+                showToast('Failed to capture 360° image. Please check camera connection.', 'error');
+                
+                // Reset button state
+                captureBtn.innerHTML = '<i class="fas fa-circle"></i>';
+                captureBtn.disabled = false;
+                
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<div class="status-indicator"></div> Ready to capture';
+                }
+            }
+        }
+
+        async function waitForImageReady(commandId) {
+            let attempts = 0;
+            const maxAttempts = 30; // 30 seconds timeout
+            
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch(`http://${window.cameraIP}/osc/commands/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: commandId
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const status = await response.json();
+                        if (status.state === 'done') {
+                            return status.results;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Status check failed:', error);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts++;
+            }
+            
+            throw new Error('Image capture timeout');
+        }
+
+        async function download360Image(commandId) {
+            try {
+                // Get the latest image from camera
+                const listResponse = await fetch(`http://${window.cameraIP}/osc/commands/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'camera.listFiles',
+                        parameters: {
+                            fileType: 'image',
+                            maxThumbSize: 0
+                        }
+                    })
+                });
+                
+                if (listResponse.ok) {
+                    const listResult = await listResponse.json();
+                    const latestImage = listResult.results.entries[0];
+                    
+                    if (latestImage) {
+                        // Download the image
+                        const imageResponse = await fetch(latestImage.fileUrl);
+                        if (imageResponse.ok) {
+                            return await imageResponse.blob();
+                        }
+                    }
+                }
+                
+                throw new Error('Failed to download 360° image');
+            } catch (error) {
+                console.error('Download failed:', error);
+                return null;
+            }
+        }
+
+        function capturePhoneImage() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert to blob for validation
+            canvas.toBlob(function(blob) {
+                validateAndSaveImage(blob, currentRoom, currentFloor);
+            }, 'image/jpeg', 0.9);
+        }
+
+        function validateAndSaveImage(blob, roomName, floor) {
+            // Simulate validation process
+            setTimeout(() => {
+                // Mark room as captured
+                const rooms = floorRooms[floor];
+                const room = rooms.find(r => r.name === roomName);
+                if (room) {
+                    room.captured = true;
+                }
+                
+                // Store the image
+                const key = `${floor}-${roomName}`;
+                capturedImages[key] = blob;
+                
+                // Show validation modal
+                document.getElementById('validatedRoom').textContent = roomName;
+                document.getElementById('validationModal').style.display = 'flex';
+                
+                // Update UI
+                renderRooms();
+                updateProgress();
+                
+                // Close camera
+                closeCamera();
+            }, 1000);
+        }
+
+        function closeValidation() {
+            document.getElementById('validationModal').style.display = 'none';
+        }
+
+        function retakePhoto() {
+            // Remove the captured status
+            const rooms = floorRooms[currentFloor];
+            const room = rooms.find(r => r.name === currentRoom);
+            if (room) {
+                room.captured = false;
+            }
+            
+            // Remove from captured images
+            const key = `${currentFloor}-${currentRoom}`;
+            delete capturedImages[key];
+            
+            closeValidation();
+            renderRooms();
+            updateProgress();
+            openCamera(currentRoom);
+        }
+
+        function switchCamera() {
+            // Implementation for switching between front/back camera
+            console.log('Switch camera functionality');
+        }
+
+        // Global functions for camera connection
+        window.retryConnection = retryConnection;
+        window.usePhoneCamera = usePhoneCamera;
+
+        function updateProgress() {
+            const totalRooms = Object.values(floorRooms).flat().length;
+            const capturedRooms = Object.values(floorRooms).flat().filter(room => room.captured).length;
+            const percentage = Math.round((capturedRooms / totalRooms) * 100);
+            
+            document.getElementById('progressText').textContent = `${capturedRooms} of ${totalRooms} rooms captured`;
+            document.getElementById('progressPercent').textContent = `${percentage}%`;
+            document.getElementById('progressFill').style.width = `${percentage}%`;
+            
+            // Show generate tour button when all rooms are captured
+            if (capturedRooms === totalRooms) {
+                document.getElementById('generateTour').style.display = 'flex';
+            }
+        }
+
+        function generateTour() {
+            // Validate all images and generate tour
+            console.log('Generating tour with captured images:', capturedImages);
+            
+            // Show loading state
+            const btn = document.getElementById('generateTour');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+            
+            // Simulate tour generation
+            setTimeout(() => {
+                showToast('Tour generated successfully! Redirecting to viewer...', 'success');
+                // Redirect to tour viewer
+                setTimeout(() => {
+                    window.location.href = 'viewer.html';
+                }, 1500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

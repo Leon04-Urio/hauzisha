@@ -1,0 +1,33 @@
+# Secrets / local config
+api/config/app.ini
+.env
+cookies.txt
+
+# Dependencies & binaries
+node_modules/
+ngrok
+*.tgz
+
+# Runtime data
+uploads/
+api/cache/
+*.log
+
+# Database dumps
+*.sql
+
+# Editor / tooling
+.vscode/
+.qodo/
+.kiro/
+vendor/
+old/
+debug-*.php
+api/test-upload.php
+images/test*
+loft-tour/test*
+loft-tour/create-test-images.html
+test*.html
+wraps/
+ngrok*
+api/uploads/

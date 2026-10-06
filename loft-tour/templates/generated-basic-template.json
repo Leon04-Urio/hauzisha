@@ -1,0 +1,63 @@
+{
+    "$schema": "https://loft-tour.schema.json",
+    "version": "1.0",
+    "tourName": "Test basic Template",
+    "description": "A beautiful property walkthrough",
+    "metadata": {
+        "created": "2026-01-17",
+        "author": "LOFT\u00b3 System",
+        "propertyType": "residential",
+        "totalNodes": 3,
+        "estimatedDuration": "2-3 minutes"
+    },
+    "settings": {
+        "autoAdvance": false,
+        "showProgress": true,
+        "enableGyroscope": true,
+        "defaultTransitionDuration": 1200
+    },
+    "nodes": [
+        {
+            "id": "entrance",
+            "label": "Main Entrance",
+            "description": "Welcome to this beautiful property entrance",
+            "image": "entrance.jpg",
+            "nextNode": "foyer",
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 0
+        },
+        {
+            "id": "foyer",
+            "label": "Grand Foyer",
+            "description": "Spacious foyer with elegant design",
+            "image": "foyer.jpg",
+            "nextNode": "living_room",
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 1
+        },
+        {
+            "id": "living_room",
+            "label": "Living Room",
+            "description": "Comfortable living area with modern furnishings",
+            "image": "living_room.jpg",
+            "nextNode": null,
+            "rotationLimits": {
+                "h": 30,
+                "v": 10
+            },
+            "initialYaw": 0,
+            "initialPitch": 0,
+            "nodeOrder": 2
+        }
+    ]
+}

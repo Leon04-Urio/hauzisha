@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://loft-tour.schema.json",
+  "title": "LOFT³ Tour Metadata Schema",
+  "description": "JSON Schema for LOFT³ panoramic tour metadata validation",
+  "type": "object",
+  "required": ["tourName", "nodes"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Metadata format version",
+      "default": "1.0"
+    },
+    "tourName": {
+      "type": "string",
+      "description": "Name of the tour",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "description": "Tour description",
+      "maxLength": 1000
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional tour metadata",
+      "properties": {
+        "created": {
+          "type": "string",
+          "format": "date",
+          "description": "Creation date"
+        },
+        "author": {
+          "type": "string",
+          "description": "Tour author"
+        },
+        "propertyType": {
+          "type": "string",
+          "enum": ["residential", "commercial", "luxury_residential", "office", "retail", "industrial"],
+          "description": "Type of property"
+        },
+        "totalNodes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of nodes"
+        },
+        "estimatedDuration": {
+          "type": "string",
+          "description": "Estimated tour duration"
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "description": "Tour playback settings",
+      "properties": {
+        "autoAdvance": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically advance to next node"
+        },
+        "showProgress": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show progress indicator"
+        },
+        "enableGyroscope": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable gyroscope controls on mobile"
+        },
+        "defaultTransitionDuration": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 3000,
+          "default": 1200,
+          "description": "Default transition duration in milliseconds"
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Array of tour nodes",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/node"
+      }
+    }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "image"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique node identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "label": {
+          "type": "string",
+          "description": "Display name for the node",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the space",
+          "maxLength": 500
+        },
+        "image": {
+          "type": "string",
+          "description": "Panorama image filename",
+          "pattern": "\\.(jpg|jpeg|png)$"
+        },
+        "nextNode": {
+          "type": ["string", "null"],
+          "description": "ID of the next node in sequence"
+        },
+        "rotationLimits": {
+          "type": "object",
+          "description": "Camera rotation constraints",
+          "properties": {
+            "h": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 180,
+              "default": 30,
+              "description": "Horizontal rotation limit in degrees"
+            },
+            "v": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90,
+              "default": 10,
+              "description": "Vertical rotation limit in degrees"
+            }
+          }
+        },
+        "initialYaw": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "default": 0,
+          "description": "Starting horizontal rotation in degrees"
+        },
+        "initialPitch": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "default": 0,
+          "description": "Starting vertical rotation in degrees"
+        },
+        "nodeOrder": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Display order for navigation"
+        },
+        "layers": {
+          "type": "array",
+          "description": "Array of parallax layers",
+          "items": {
+            "$ref": "#/definitions/layer"
+          }
+        }
+      }
+    },
+    "layer": {
+      "type": "object",
+      "required": ["name", "image", "position"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique layer name",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "description": {
+          "type": "string",
+          "description": "Layer description",
+          "maxLength": 200
+        },
+        "image": {
+          "type": "string",
+          "description": "Layer PNG image filename",
+          "pattern": "\\.png$"
+        },
+        "position": {
+          "type": "object",
+          "required": ["x", "y"],
+          "description": "Layer position coordinates",
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Horizontal position (0-1 range)"
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Vertical position (0-1 range)"
+            }
+          }
+        },
+        "parallaxFactor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "Parallax movement intensity"
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10,
+          "default": 1.0,
+          "description": "Layer scale factor"
+        },
+        "rotation": {
+          "type": "number",
+          "default": 0,
+          "description": "Layer rotation in degrees"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1.0,
+          "description": "Layer transparency"
+        },
+        "visible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Layer visibility"
+        },
+        "depthOrder": {
+          "type": "integer",
+          "default": 0,
+          "description": "Layer depth sorting (higher values appear in front)"
+        }
+      }
+    }
+  }
+}

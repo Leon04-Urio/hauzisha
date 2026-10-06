@@ -1,0 +1,1778 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOFT Automated Tour Generator</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/loft-tour.css">
+    <link rel="stylesheet" href="css/matterport-ui.css">
+    <link rel="stylesheet" href="css/loft-tour-sharing.css">
+    <link rel="stylesheet" href="css/loft-tour-export.css">
+    <style>
+        /* Essential styles for upload functionality */
+        .drop-zone.processing {
+            border-color: #007bff;
+            background: #e3f2fd;
+            opacity: 0.8;
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background: #ffeaea;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #d4af37;
+            background: #fff9e6;
+        }
+        
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .preview-thumbnail {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .preview-info {
+            flex: 1;
+        }
+        
+        .preview-name {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .preview-size {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .node-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .node-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .node-item.selected {
+            background: #fff9e6;
+            border-color: #d4af37;
+        }
+        
+        .node-preview {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .node-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .node-info {
+            flex: 1;
+        }
+        
+        .node-label {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .node-id {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #d4af37;
+            transform: scale(1.2);
+        }
+        
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        #meta-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" class="app">
+        
+        <!-- Upload Section -->
+        <section id="upload-section" class="section active">
+            <div class="upload-container">
+                <div class="upload-header">
+                    <div class="logo">
+                        <i class="fas fa-cube"></i>
+                        <h1>LOFT<sup>3</sup> Tour Generator</h1>
+                    </div>
+                    <p class="tagline">Automated Matterport-Style Walkthrough Creator</p>
+                </div>
+
+                <div class="upload-grid">
+                    <!-- Panoramas Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <h3>Upload Panoramas</h3>
+                        <p>360° equirectangular images</p>
+                        <div class="drop-zone" id="pano-drop-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Drag & drop or click</span>
+                            <input type="file" id="pano-input" accept="image/*" multiple hidden>
+                        </div>
+                        <div id="pano-preview" class="preview-list"></div>
+                    </div>
+
+                    <!-- Metadata Upload -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <h3>Tour Metadata</h3>
+                        <p>JSON or CSV with node info</p>
+                        <div class="drop-zone" id="meta-drop-zone">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Upload JSON/CSV</span>
+                            <input type="file" id="meta-input" accept=".json,.csv" hidden>
+                        </div>
+                        <div id="meta-preview" class="meta-info"></div>
+                        <button class="btn-link" onclick="showMetaTemplate()">
+                            <i class="fas fa-info-circle"></i> View Template
+                        </button>
+                    </div>
+
+                    <!-- Layers Upload (Optional) -->
+                    <div class="upload-card">
+                        <div class="card-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>Parallax Layers</h3>
+                        <p>Optional PNG overlays</p>
+                        <div class="drop-zone" id="layer-drop-zone">
+                            <i class="fas fa-images"></i>
+                            <span>Add layers (optional)</span>
+                            <input type="file" id="layer-input" accept="image/png" multiple hidden>
+                        </div>
+                        <div id="layer-preview" class="preview-list"></div>
+                    </div>
+                </div>
+
+                <div class="upload-actions">
+                    <button class="btn btn-primary btn-large" id="generate-btn" disabled>
+                        <i class="fas fa-magic"></i>
+                        Generate Tour
+                    </button>
+                    <button class="btn btn-secondary" onclick="debugTourData()" style="margin-left: 10px;">
+                        <i class="fas fa-bug"></i>
+                        Debug Data
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Editor Section -->
+        <section id="editor-section" class="section">
+            <div class="editor-layout">
+                <!-- Sidebar -->
+                <aside class="editor-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Tour Nodes</h3>
+                        <button class="btn-icon" onclick="addNode()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="nodes-list" class="nodes-list"></div>
+                </aside>
+
+                <!-- Main Editor -->
+                <main class="editor-main">
+                    <div class="editor-toolbar">
+                        <div class="toolbar-left">
+                            <button class="btn-icon" onclick="backToUpload()">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <span class="node-title" id="current-node-title">Select a node</span>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-secondary" onclick="previewTour()">
+                                <i class="fas fa-play"></i> Preview
+                            </button>
+                            <button class="btn btn-primary" onclick="saveTour()">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="editor-content">
+                        <div class="panorama-preview" id="pano-editor-preview">
+                            <!-- Visual Layer Editor will be inserted here -->
+                            <div class="preview-overlay">
+                                <p>Select a node to edit</p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panels">
+                            <!-- Node Settings -->
+                            <div class="panel">
+                                <h4>Node Settings</h4>
+                                <div class="form-group">
+                                    <label>Label</label>
+                                    <input type="text" id="node-label" class="form-control" placeholder="e.g., Living Room">
+                                </div>
+                                <div class="form-group">
+                                    <label>Next Node</label>
+                                    <select id="node-next" class="form-control">
+                                        <option value="">End of tour</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Rotation Limits</label>
+                                    <div class="range-group">
+                                        <input type="range" id="rotation-h" min="10" max="180" value="30">
+                                        <span id="rotation-h-val">±30°</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </section>
+
+        <!-- Viewer Section -->
+        <section id="viewer-section" class="section">
+            <div class="viewer-container">
+                <div class="viewer-header">
+                    <button class="btn-icon" onclick="exitViewer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="viewer-info">
+                        <h3 id="viewer-node-label">Loading...</h3>
+                        <p id="viewer-distance">From entrance</p>
+                    </div>
+                    <div class="viewer-actions">
+                        <button class="btn-icon fullscreen-btn" onclick="toggleFullscreen()" title="Enter fullscreen (F)">
+                            <i class="fas fa-expand icon-expand"></i>
+                            <i class="fas fa-compress icon-compress"></i>
+                        </button>
+                        <button class="btn-icon" onclick="shareTour()">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="viewer-canvas-container" class="viewer-canvas">
+                    <canvas id="viewer-canvas"></canvas>
+                </div>
+
+                <div class="viewer-controls">
+                    <button class="nav-btn" id="prev-btn" onclick="previousNode()" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="progress-dots" id="progress-dots"></div>
+                    <button class="nav-btn" id="next-btn" onclick="nextNode()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="viewer-ui">
+                    <button class="ui-toggle" onclick="toggleUI()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="meta-template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Metadata Template</h3>
+                <button class="btn-icon" onclick="closeModal('meta-template-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Create a JSON file with this structure:</p>
+                <pre><code>{
+  "nodes": [
+    {
+      "id": "gate",
+      "image": "gate.jpg",
+      "label": "Main Gate",
+      "next": "entrance",
+      "layers": [
+        {
+          "image": "car.png",
+          "x": 0.3,
+          "y": 0.5,
+          "scale": 1.0,
+          "parallaxFactor": 0.5
+        }
+      ]
+    },
+    {
+      "id": "entrance",
+      "image": "entrance.jpg",
+      "label": "Entrance Hall",
+      "next": "living"
+    }
+  ]
+}</code></pre>
+                <button class="btn btn-primary" onclick="downloadTemplate()">
+                    <i class="fas fa-download"></i> Download Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">Processing...</p>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Three.js for parallax layers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Marzipano for panorama rendering (Local) -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <!-- LOFT³ Tour Engine Components -->
+    <script src="js/loft-tour-metadata-parser.js"></script>
+    <script src="js/loft-tour-mobile-optimization.js"></script>
+    <script src="js/loft-tour-progressive-loader.js"></script>
+    <script src="js/loft-tour-core.js"></script>
+    <script src="js/loft-tour-layers.js"></script>
+    <script src="js/loft-tour-layer-library.js"></script>
+    <script src="js/loft-tour-depth-effects.js"></script>
+    <script src="js/loft-tour-transitions.js"></script>
+    <script src="js/loft-tour-controls.js"></script>
+    <script src="js/loft-tour-visual-editor.js"></script>
+    <script src="js/loft-tour-matterport-ui.js"></script>
+    <script src="js/loft-tour-viewer.js"></script>
+    <script src="js/loft-tour-sharing.js"></script>
+    <script src="js/loft-tour-offline-packager.js"></script>
+    <script src="js/loft-tour-export-ui.js"></script>
+    <script src="js/loft-tour-editor.js"></script>
+
+    <script>
+        // Global variables for the main application
+        let uploadedPanoramas = [];
+        let uploadedLayers = [];
+        let tourMetadata = null;
+        let currentTour = null;
+        let currentRoomIndex = 0;
+        let tourViewer = null;
+
+        // Debug function to check data state
+        function debugTourData() {
+            console.log('=== TOUR DATA DEBUG ===');
+            console.log('uploadedPanoramas:', uploadedPanoramas.length);
+            console.log('tourMetadata:', tourMetadata);
+            console.log('currentTour:', currentTour);
+            console.log('currentTour nodes:', currentTour ? currentTour.nodes.length : 'N/A');
+            console.log('========================');
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        /**
+         * Initialize the main application
+         */
+        function initializeApp() {
+            setupUploadHandlers();
+            setupUI();
+            
+            // Connect with existing editor system
+            connectWithExistingEditor();
+            
+            console.log('LOFT³ Tour Generator initialized');
+        }
+
+        /**
+         * Connect with existing editor system
+         */
+        function connectWithExistingEditor() {
+            // Wait for the existing editor to initialize
+            setTimeout(() => {
+                if (window.loftTourEditor) {
+                    console.log('Connected with existing LOFT Tour Editor');
+                    
+                    // Override the existing generateTour function
+                    window.generateTour = generateTour;
+                    
+                    // Sync data immediately if available
+                    if (window.loftTourEditor.uploadedPanoramas && window.loftTourEditor.uploadedPanoramas.length > 0) {
+                        uploadedPanoramas = window.loftTourEditor.uploadedPanoramas.map(pano => ({
+                            name: pano.name,
+                            file: pano.file,
+                            size: pano.file ? pano.file.size : 0,
+                            url: pano.dataUrl || pano.url
+                        }));
+                        updatePanoramaPreview();
+                    }
+                    
+                    if (window.loftTourEditor.tourMetadata) {
+                        tourMetadata = window.loftTourEditor.tourMetadata;
+                        const previewContainer = document.getElementById('meta-preview');
+                        if (previewContainer) {
+                            previewContainer.textContent = JSON.stringify(tourMetadata, null, 2);
+                        }
+                    }
+                    
+                    // Monitor for changes in the editor's data
+                    setInterval(() => {
+                        let updated = false;
+                        
+                        if (window.loftTourEditor.uploadedPanoramas && window.loftTourEditor.uploadedPanoramas.length > 0) {
+                            const newPanoramas = window.loftTourEditor.uploadedPanoramas.map(pano => ({
+                                name: pano.name,
+                                file: pano.file,
+                                size: pano.file ? pano.file.size : 0,
+                                url: pano.dataUrl || pano.url
+                            }));
+                            
+                            if (newPanoramas.length !== uploadedPanoramas.length) {
+                                uploadedPanoramas = newPanoramas;
+                                updatePanoramaPreview();
+                                updated = true;
+                            }
+                        }
+                        
+                        if (window.loftTourEditor.tourMetadata && window.loftTourEditor.tourMetadata !== tourMetadata) {
+                            tourMetadata = window.loftTourEditor.tourMetadata;
+                            const previewContainer = document.getElementById('meta-preview');
+                            if (previewContainer) {
+                                previewContainer.textContent = JSON.stringify(tourMetadata, null, 2);
+                            }
+                            updated = true;
+                        }
+                        
+                        if (updated) {
+                            updateGenerateButton();
+                        }
+                    }, 1000);
+                } else {
+                    console.log('LOFT Tour Editor not found, using standalone mode');
+                }
+            }, 2000);
+        }
+
+        /**
+         * Setup file upload handlers
+         */
+        function setupUploadHandlers() {
+            // Panorama upload
+            setupDropZone('pano-drop-zone', 'pano-input', handlePanoramaUpload);
+            
+            // Metadata upload
+            setupDropZone('meta-drop-zone', 'meta-input', handleMetadataUpload);
+            
+            // Layer upload
+            setupDropZone('layer-drop-zone', 'layer-input', handleLayerUpload);
+        }
+
+        /**
+         * Setup UI components
+         */
+        function setupUI() {
+            // Update generate button state initially
+            updateGenerateButton();
+        }
+
+        /**
+         * Setup drag & drop zone
+         */
+        function setupDropZone(dropZoneId, inputId, callback) {
+            const dropZone = document.getElementById(dropZoneId);
+            const input = document.getElementById(inputId);
+            
+            if (!dropZone || !input) return;
+            
+            // Click to upload
+            dropZone.addEventListener('click', () => {
+                if (!dropZone.classList.contains('processing')) {
+                    input.click();
+                }
+            });
+            
+            // File input change
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelection(dropZone, Array.from(e.target.files), callback);
+                }
+            });
+            
+            // Drag & drop
+            let dragCounter = 0;
+            
+            dropZone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dragCounter++;
+                dropZone.classList.add('drag-over');
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter === 0) {
+                    dropZone.classList.remove('drag-over');
+                }
+            });
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dragCounter = 0;
+                dropZone.classList.remove('drag-over');
+                
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    handleFileSelection(dropZone, files, callback);
+                }
+            });
+        }
+
+        /**
+         * Handle file selection with processing states
+         */
+        async function handleFileSelection(dropZone, files, callback) {
+            dropZone.classList.add('processing');
+            
+            try {
+                await callback(files);
+                
+                dropZone.classList.remove('processing');
+                dropZone.classList.add('success');
+                
+                setTimeout(() => {
+                    dropZone.classList.remove('success');
+                }, 2000);
+                
+                updateGenerateButton();
+                
+            } catch (error) {
+                console.error('File processing error:', error);
+                
+                dropZone.classList.remove('processing');
+                dropZone.classList.add('error');
+                
+                setTimeout(() => {
+                    dropZone.classList.remove('error');
+                }, 3000);
+                
+                showNotification('Failed to process files: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Handle panorama upload
+         */
+        async function handlePanoramaUpload(files) {
+            const validFiles = files.filter(file => 
+                file.type.startsWith('image/') && 
+                (file.type.includes('jpeg') || file.type.includes('jpg') || file.type.includes('png'))
+            );
+            
+            if (validFiles.length === 0) {
+                throw new Error('Please select valid image files (JPG, PNG)');
+            }
+            
+            const previewContainer = document.getElementById('pano-preview');
+            
+            for (const file of validFiles) {
+                // Create preview
+                const preview = await createImagePreview(file);
+                
+                // Add to uploaded list
+                uploadedPanoramas.push({
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    url: preview.url
+                });
+                
+                // Add to preview container
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <img src="${preview.url}" alt="${file.name}" class="preview-thumbnail">
+                    <div class="preview-info">
+                        <div class="preview-name">${file.name}</div>
+                        <div class="preview-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <button onclick="removePanorama('${file.name}')" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(previewItem);
+            }
+            
+            showNotification(`${validFiles.length} panorama(s) uploaded successfully`, 'success');
+        }
+
+        /**
+         * Handle metadata upload
+         */
+        async function handleMetadataUpload(files) {
+            if (files.length !== 1) {
+                throw new Error('Please select exactly one metadata file');
+            }
+            
+            const file = files[0];
+            const isJSON = file.name.endsWith('.json');
+            const isCSV = file.name.endsWith('.csv');
+            
+            if (!isJSON && !isCSV) {
+                throw new Error('Please select a JSON or CSV file');
+            }
+            
+            const text = await file.text();
+            let metadata;
+            
+            try {
+                if (isJSON) {
+                    metadata = JSON.parse(text);
+                } else {
+                    // Simple CSV parsing
+                    const lines = text.split('\n').filter(line => line.trim());
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const nodes = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const node = {};
+                        headers.forEach((header, index) => {
+                            node[header] = values[index] || '';
+                        });
+                        nodes.push(node);
+                    }
+                    
+                    metadata = { nodes };
+                }
+                
+                tourMetadata = metadata;
+                
+                // Show preview
+                const previewContainer = document.getElementById('meta-preview');
+                previewContainer.textContent = JSON.stringify(metadata, null, 2);
+                
+                showNotification('Metadata loaded successfully', 'success');
+                
+            } catch (error) {
+                throw new Error('Invalid metadata format: ' + error.message);
+            }
+        }
+
+        /**
+         * Handle layer upload
+         */
+        async function handleLayerUpload(files) {
+            const validFiles = files.filter(file => file.type === 'image/png');
+            
+            if (validFiles.length === 0) {
+                throw new Error('Please select PNG files for layers');
+            }
+            
+            const previewContainer = document.getElementById('layer-preview');
+            
+            for (const file of validFiles) {
+                const preview = await createImagePreview(file);
+                
+                uploadedLayers.push({
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    url: preview.url
+                });
+                
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <img src="${preview.url}" alt="${file.name}" class="preview-thumbnail">
+                    <div class="preview-info">
+                        <div class="preview-name">${file.name}</div>
+                        <div class="preview-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <button onclick="removeLayer('${file.name}')" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(previewItem);
+            }
+            
+            showNotification(`${validFiles.length} layer(s) uploaded successfully`, 'success');
+        }
+
+        /**
+         * Create image preview
+         */
+        function createImagePreview(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    resolve({
+                        url: e.target.result,
+                        file: file
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Format file size
+         */
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        /**
+         * Remove panorama
+         */
+        function removePanorama(name) {
+            uploadedPanoramas = uploadedPanoramas.filter(p => p.name !== name);
+            updatePanoramaPreview();
+            updateGenerateButton();
+        }
+
+        /**
+         * Remove layer
+         */
+        function removeLayer(name) {
+            uploadedLayers = uploadedLayers.filter(l => l.name !== name);
+            updateLayerPreview();
+        }
+
+        /**
+         * Update panorama preview
+         */
+        function updatePanoramaPreview() {
+            const container = document.getElementById('pano-preview');
+            container.innerHTML = '';
+            
+            uploadedPanoramas.forEach(pano => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <img src="${pano.url}" alt="${pano.name}" class="preview-thumbnail">
+                    <div class="preview-info">
+                        <div class="preview-name">${pano.name}</div>
+                        <div class="preview-size">${formatFileSize(pano.size)}</div>
+                    </div>
+                    <button onclick="removePanorama('${pano.name}')" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(previewItem);
+            });
+        }
+
+        /**
+         * Update layer preview
+         */
+        function updateLayerPreview() {
+            const container = document.getElementById('layer-preview');
+            container.innerHTML = '';
+            
+            uploadedLayers.forEach(layer => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <img src="${layer.url}" alt="${layer.name}" class="preview-thumbnail">
+                    <div class="preview-info">
+                        <div class="preview-name">${layer.name}</div>
+                        <div class="preview-size">${formatFileSize(layer.size)}</div>
+                    </div>
+                    <button onclick="removeLayer('${layer.name}')" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(previewItem);
+            });
+        }
+
+        /**
+         * Update generate button state
+         */
+        function updateGenerateButton() {
+            const btn = document.getElementById('generate-btn');
+            if (!btn) return;
+            
+            // Check both new and old systems
+            let hasImages = uploadedPanoramas.length > 0;
+            let hasMetadata = tourMetadata !== null;
+            
+            // Also check the existing editor system
+            if (window.loftTourEditor) {
+                if (window.loftTourEditor.uploadedPanoramas && window.loftTourEditor.uploadedPanoramas.length > 0) {
+                    hasImages = true;
+                }
+                if (window.loftTourEditor.tourMetadata) {
+                    hasMetadata = true;
+                }
+            }
+            
+            btn.disabled = !(hasImages && hasMetadata);
+            
+            // Update button text based on state
+            if (hasImages && hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Generate Virtual Tour';
+            } else if (hasImages && !hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-file-upload"></i> Upload Metadata First';
+            } else if (!hasImages && hasMetadata) {
+                btn.innerHTML = '<i class="fas fa-images"></i> Upload Images First';
+            } else {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Generate Tour';
+            }
+        }
+
+        /**
+         * Generate tour - MAIN FUNCTION
+         */
+        async function generateTour() {
+            console.log('=== GENERATE TOUR START ===');
+            console.log('uploadedPanoramas:', uploadedPanoramas.length);
+            console.log('tourMetadata:', tourMetadata);
+            
+            if (uploadedPanoramas.length === 0) {
+                showNotification('Please upload at least one panorama image', 'error');
+                return;
+            }
+            
+            if (!tourMetadata) {
+                showNotification('Please upload tour metadata', 'error');
+                return;
+            }
+            
+            showLoading('Generating virtual tour...');
+            
+            try {
+                // Convert uploaded panoramas to the format expected by the editor
+                const editorPanoramas = uploadedPanoramas.map(pano => ({
+                    name: pano.name,
+                    file: pano.file,
+                    dataUrl: pano.url,
+                    url: pano.url,
+                    size: pano.size
+                }));
+                
+                // Store data globally for the editor to access
+                window.uploadedPanoramas = editorPanoramas;
+                window.tourMetadata = tourMetadata;
+                
+                // Create tour data
+                const tourData = {
+                    name: tourMetadata.name || 'Generated Tour',
+                    nodes: []
+                };
+                
+                console.log('Processing metadata nodes:', tourMetadata.nodes);
+                
+                // Process metadata and match with images
+                if (tourMetadata.nodes) {
+                    for (const nodeData of tourMetadata.nodes) {
+                        console.log('Processing node:', nodeData);
+                        
+                        // Find matching image with multiple strategies
+                        const matchingImage = uploadedPanoramas.find(pano => {
+                            const panoName = pano.name || '';
+                            const imageName = nodeData.image || '';
+                            const nodeId = nodeData.id || '';
+                            
+                            const match = panoName === imageName ||
+                                         panoName.includes(nodeId) ||
+                                         nodeId.includes(panoName.split('.')[0]) ||
+                                         panoName.split('.')[0] === imageName.split('.')[0];
+                            
+                            console.log(`Matching "${panoName}" with "${imageName}"/"${nodeId}": ${match}`);
+                            return match;
+                        });
+                        
+                        if (matchingImage) {
+                            const node = {
+                                id: nodeData.id || `node_${tourData.nodes.length}`,
+                                label: nodeData.label || nodeData.id || `Room ${tourData.nodes.length + 1}`,
+                                imageUrl: matchingImage.url,
+                                nextNode: nodeData.next || nodeData.nextNode,
+                                layers: nodeData.layers || [],
+                                panoramaData: {
+                                    name: matchingImage.name,
+                                    dataUrl: matchingImage.url,
+                                    url: matchingImage.url,
+                                    file: matchingImage.file
+                                }
+                            };
+                            
+                            tourData.nodes.push(node);
+                            console.log(`✓ Matched node ${nodeData.id} with image ${matchingImage.name}`);
+                        } else {
+                            console.warn(`✗ No matching image found for node ${nodeData.id} (looking for ${nodeData.image})`);
+                        }
+                    }
+                }
+                
+                // If no metadata matches, create simple tour from images
+                if (tourData.nodes.length === 0) {
+                    console.log('No metadata matches found, creating nodes from all images');
+                    uploadedPanoramas.forEach((pano, index) => {
+                        const node = {
+                            id: `node_${index}`,
+                            label: `Room ${index + 1}`,
+                            imageUrl: pano.url,
+                            nextNode: index < uploadedPanoramas.length - 1 ? `node_${index + 1}` : null,
+                            layers: [],
+                            panoramaData: {
+                                name: pano.name,
+                                dataUrl: pano.url,
+                                url: pano.url,
+                                file: pano.file
+                            }
+                        };
+                        tourData.nodes.push(node);
+                        console.log(`✓ Created node ${node.id} from image ${pano.name}`);
+                    });
+                }
+                
+                // CRITICAL: Set currentTour BEFORE any other operations
+                currentTour = tourData;
+                window.currentTour = tourData; // Also set globally
+                
+                console.log('=== TOUR GENERATED ===');
+                console.log('Tour Data:', currentTour);
+                console.log('Nodes created:', currentTour.nodes.length);
+                
+                // Pass data to the editor system if it exists
+                if (window.loftTourEditor) {
+                    window.loftTourEditor.uploadedPanoramas = editorPanoramas;
+                    window.loftTourEditor.tourMetadata = tourMetadata;
+                    window.loftTourEditor.currentTour = tourData;
+                    console.log('Data passed to existing editor system');
+                }
+                
+                hideLoading();
+                
+                // Switch to editor instead of viewer
+                switchToEditor();
+                
+                showNotification(`Tour generated successfully with ${tourData.nodes.length} nodes!`, 'success');
+                
+                // Debug the final state
+                debugTourData();
+                
+            } catch (error) {
+                hideLoading();
+                showNotification('Failed to generate tour: ' + error.message, 'error');
+                console.error('Tour generation error:', error);
+            }
+        }
+
+        /**
+         * Show tour viewer
+         */
+        function showTourViewer() {
+            // Hide upload section
+            document.getElementById('upload-section').classList.remove('active');
+            
+            // Show viewer section
+            document.getElementById('viewer-section').classList.add('active');
+            
+            // Create simple tour viewer
+            const container = document.getElementById('viewer-canvas-container');
+            container.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%; background: #000;">
+                    <div id="tour-display" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <img id="current-panorama" style="width: 100%; height: 100%; object-fit: cover;" />
+                        
+                        <!-- Tour Controls -->
+                        <div style="position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100;">
+                            <button onclick="backToUpload()" style="background: rgba(0,0,0,0.7); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                                <i class="fas fa-arrow-left"></i> Back to Upload
+                            </button>
+                            
+                            <div style="background: rgba(0,0,0,0.7); color: white; padding: 10px 15px; border-radius: 5px;">
+                                <span id="current-room-label">Loading...</span>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="exportTour()" style="background: rgba(212,175,55,0.9); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button onclick="shareTour()" style="background: rgba(212,175,55,0.9); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Navigation Controls -->
+                        <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; z-index: 100;">
+                            <button id="prev-btn" onclick="previousRoom()" style="background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px 20px; border-radius: 50px; cursor: pointer; font-size: 18px;" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            
+                            <div style="background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 25px; display: flex; align-items: center; gap: 10px;">
+                                <span id="room-counter">1 / 1</span>
+                                <div style="width: 100px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+                                    <div id="progress-bar" style="width: 0%; height: 100%; background: #d4af37; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                            
+                            <button id="next-btn" onclick="nextRoom()" style="background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px 20px; border-radius: 50px; cursor: pointer; font-size: 18px;">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Initialize tour
+            currentRoomIndex = 0;
+            loadRoom(0);
+        }
+
+        /**
+         * Load room
+         */
+        function loadRoom(index) {
+            if (!currentTour || !currentTour.nodes || index < 0 || index >= currentTour.nodes.length) {
+                return;
+            }
+            
+            const node = currentTour.nodes[index];
+            currentRoomIndex = index;
+            
+            // Update panorama
+            const img = document.getElementById('current-panorama');
+            if (img) {
+                img.src = node.imageUrl;
+                img.alt = node.label;
+            }
+            
+            // Update room label
+            const label = document.getElementById('current-room-label');
+            if (label) {
+                label.textContent = node.label;
+            }
+            
+            // Update counter
+            const counter = document.getElementById('room-counter');
+            if (counter) {
+                counter.textContent = `${index + 1} / ${currentTour.nodes.length}`;
+            }
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                const progress = ((index + 1) / currentTour.nodes.length) * 100;
+                progressBar.style.width = progress + '%';
+            }
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            if (prevBtn) {
+                prevBtn.disabled = index === 0;
+                prevBtn.style.opacity = index === 0 ? '0.5' : '1';
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = index === currentTour.nodes.length - 1;
+                nextBtn.style.opacity = index === currentTour.nodes.length - 1 ? '0.5' : '1';
+            }
+        }
+
+        /**
+         * Navigation functions
+         */
+        function previousRoom() {
+            if (currentRoomIndex > 0) {
+                loadRoom(currentRoomIndex - 1);
+            }
+        }
+
+        function nextRoom() {
+            if (currentRoomIndex < currentTour.nodes.length - 1) {
+                loadRoom(currentRoomIndex + 1);
+            }
+        }
+
+        function exportTour() {
+            if (!currentTour) {
+                showNotification('No tour to export', 'error');
+                return;
+            }
+            
+            showNotification('Export functionality coming soon!', 'info');
+        }
+
+        function shareTour() {
+            if (!currentTour) {
+                showNotification('No tour to share', 'error');
+                return;
+            }
+            
+            showNotification('Share functionality coming soon!', 'info');
+        }
+
+        /**
+         * Switch to editor section
+         */
+        function switchToEditor() {
+            // Hide upload section
+            document.getElementById('upload-section').classList.remove('active');
+            
+            // Show editor section
+            document.getElementById('editor-section').classList.add('active');
+            
+            // Populate editor with tour data
+            populateEditor();
+        }
+
+        /**
+         * Populate editor with tour data
+         */
+        function populateEditor() {
+            console.log('=== POPULATE EDITOR ===');
+            console.log('currentTour:', currentTour);
+            
+            if (!currentTour || !currentTour.nodes) {
+                console.error('No tour data to populate editor');
+                return;
+            }
+            
+            const nodesList = document.getElementById('nodes-list');
+            if (!nodesList) {
+                console.error('nodes-list element not found');
+                return;
+            }
+            
+            nodesList.innerHTML = '';
+            
+            console.log('Creating', currentTour.nodes.length, 'node items');
+            
+            currentTour.nodes.forEach((node, index) => {
+                console.log(`Creating node item ${index}:`, node);
+                const nodeItem = createNodeListItem(node, index);
+                nodesList.appendChild(nodeItem);
+            });
+            
+            // Select first node
+            if (currentTour.nodes.length > 0) {
+                selectNode(0);
+            }
+            
+            console.log('Editor populated with', currentTour.nodes.length, 'nodes');
+        }
+
+        /**
+         * Create node list item
+         */
+        function createNodeListItem(node, index) {
+            const item = document.createElement('div');
+            item.className = 'node-item';
+            
+            // Ensure we have a valid image URL
+            const imageUrl = node.imageUrl || (node.panoramaData && (node.panoramaData.dataUrl || node.panoramaData.url)) || '';
+            
+            item.innerHTML = `
+                <div class="node-preview">
+                    <img src="${imageUrl}" alt="${node.label}" onerror="console.error('Failed to load image:', this.src); this.style.display='none';" onload="console.log('Image loaded successfully:', this.src);">
+                </div>
+                <div class="node-info">
+                    <div class="node-label">${node.label}</div>
+                    <div class="node-id">${node.id}</div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => selectNode(index));
+            
+            return item;
+        }
+
+        /**
+         * Select node in editor
+         */
+        function selectNode(index) {
+            if (!currentTour || !currentTour.nodes || index < 0 || index >= currentTour.nodes.length) {
+                return;
+            }
+            
+            const node = currentTour.nodes[index];
+            
+            // Update selected state
+            document.querySelectorAll('.node-item').forEach((item, i) => {
+                item.classList.toggle('selected', i === index);
+            });
+            
+            // Update editor panels
+            updateEditorPanels(node, index);
+            
+            // Initialize visual editor for this node
+            initializeVisualEditor(node);
+            
+            console.log('Node selected:', node.id);
+        }
+
+        /**
+         * Update editor panels
+         */
+        function updateEditorPanels(node, index) {
+            // Update current node title
+            const title = document.getElementById('current-node-title');
+            if (title) {
+                title.textContent = node.label || node.id;
+            }
+            
+            // Update node settings
+            const labelInput = document.getElementById('node-label');
+            if (labelInput) {
+                labelInput.value = node.label || '';
+            }
+            
+            const nextSelect = document.getElementById('node-next');
+            if (nextSelect) {
+                // Populate next node options
+                nextSelect.innerHTML = '<option value="">End of tour</option>';
+                currentTour.nodes.forEach((n, i) => {
+                    if (i !== index) {
+                        const option = document.createElement('option');
+                        option.value = n.id;
+                        option.textContent = n.label || n.id;
+                        option.selected = n.id === node.nextNode;
+                        nextSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Initialize visual editor
+         */
+        function initializeVisualEditor(node) {
+            const previewContainer = document.getElementById('pano-editor-preview');
+            if (!previewContainer) return;
+            
+            // Clear existing content
+            previewContainer.innerHTML = '';
+            
+            // Ensure the node has proper image data
+            let imageUrl = node.imageUrl;
+            if (!imageUrl && node.panoramaData) {
+                imageUrl = node.panoramaData.dataUrl || node.panoramaData.url;
+            }
+            
+            if (imageUrl) {
+                // Create panorama preview
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = node.label;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                img.onload = () => {
+                    console.log('Visual editor image loaded successfully for node:', node.id);
+                };
+                
+                img.onerror = () => {
+                    console.error('Failed to load image in visual editor for node:', node.id, 'URL:', imageUrl);
+                    previewContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #666;">
+                            <div style="text-align: center;">
+                                <i class="fas fa-image" style="font-size: 48px; margin-bottom: 16px;"></i>
+                                <p>Failed to load image</p>
+                                <small>${node.label}</small>
+                            </div>
+                        </div>
+                    `;
+                };
+                
+                previewContainer.appendChild(img);
+            } else {
+                console.error('No image URL available for node:', node.id);
+                previewContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #666;">
+                        <div style="text-align: center;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                            <p>No image available</p>
+                            <small>${node.label}</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            console.log('Visual editor initialized for node:', node.id, 'with image:', imageUrl ? 'YES' : 'NO');
+        }
+
+        /**
+         * Preview tour
+         */
+        function previewTour() {
+            console.log('=== PREVIEW TOUR ===');
+            console.log('currentTour:', currentTour);
+            console.log('window.currentTour:', window.currentTour);
+            debugTourData();
+            
+            // Check both local and global currentTour
+            const tourToPreview = currentTour || window.currentTour;
+            
+            if (!tourToPreview) {
+                showNotification('No tour to preview - please generate a tour first', 'error');
+                return;
+            }
+            
+            if (!tourToPreview.nodes || tourToPreview.nodes.length === 0) {
+                showNotification('Tour has no nodes to preview', 'error');
+                return;
+            }
+            
+            console.log('Previewing tour with', tourToPreview.nodes.length, 'nodes');
+            
+            // Use the existing viewer system if available
+            if (window.LoftTourViewer) {
+                try {
+                    // Hide editor section
+                    document.getElementById('editor-section').classList.remove('active');
+                    
+                    // Show viewer section
+                    document.getElementById('viewer-section').classList.add('active');
+                    
+                    // Initialize the existing tour viewer
+                    const container = document.getElementById('viewer-canvas-container');
+                    if (container) {
+                        // Clear container
+                        container.innerHTML = '<canvas id="viewer-canvas"></canvas>';
+                        
+                        // Initialize viewer with our tour data
+                        tourViewer = new LoftTourViewer(container, {
+                            tourData: tourToPreview,
+                            autoStart: true
+                        });
+                        
+                        tourViewer.loadTour(tourToPreview);
+                    }
+                } catch (error) {
+                    console.error('Failed to initialize tour viewer:', error);
+                    // Fallback to simple viewer
+                    initializeTourViewer();
+                }
+            } else {
+                // Fallback to simple viewer
+                // Hide editor section
+                document.getElementById('editor-section').classList.remove('active');
+                
+                // Show viewer section
+                document.getElementById('viewer-section').classList.add('active');
+                
+                // Initialize tour viewer
+                initializeTourViewer();
+            }
+        }
+                // Fallback to simple viewer
+                // Hide editor section
+                document.getElementById('editor-section').classList.remove('active');
+                
+                // Show viewer section
+                document.getElementById('viewer-section').classList.add('active');
+                
+                // Initialize tour viewer
+                initializeTourViewer();
+            }
+        }
+
+        /**
+         * Initialize tour viewer
+         */
+        function initializeTourViewer() {
+            const container = document.getElementById('viewer-canvas-container');
+            if (!container) return;
+            
+            // Create simple image-based viewer for now
+            container.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%; background: #000;">
+                    <img id="current-tour-image" style="width: 100%; height: 100%; object-fit: cover;" />
+                </div>
+            `;
+            
+            // Load first room
+            currentRoomIndex = 0;
+            loadTourRoom(0);
+            
+            // Update progress dots
+            updateProgressDots();
+        }
+
+        /**
+         * Load tour room
+         */
+        function loadTourRoom(index) {
+            if (!currentTour || !currentTour.nodes || index < 0 || index >= currentTour.nodes.length) {
+                return;
+            }
+            
+            const node = currentTour.nodes[index];
+            currentRoomIndex = index;
+            
+            // Update image
+            const img = document.getElementById('current-tour-image');
+            if (img) {
+                img.src = node.imageUrl;
+                img.alt = node.label;
+            }
+            
+            // Update room info
+            const label = document.getElementById('viewer-node-label');
+            if (label) {
+                label.textContent = node.label;
+            }
+            
+            const distance = document.getElementById('viewer-distance');
+            if (distance) {
+                distance.textContent = `Room ${index + 1} of ${currentTour.nodes.length}`;
+            }
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            if (prevBtn) {
+                prevBtn.disabled = index === 0;
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = index === currentTour.nodes.length - 1;
+            }
+            
+            // Update progress dots
+            updateProgressDots();
+        }
+
+        /**
+         * Update progress dots
+         */
+        function updateProgressDots() {
+            const container = document.getElementById('progress-dots');
+            if (!container || !currentTour) return;
+            
+            container.innerHTML = '';
+            
+            currentTour.nodes.forEach((node, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (index === currentRoomIndex) {
+                    dot.classList.add('active');
+                }
+                dot.addEventListener('click', () => loadTourRoom(index));
+                container.appendChild(dot);
+            });
+        }
+
+        /**
+         * Navigation functions
+         */
+        function previousNode() {
+            if (currentRoomIndex > 0) {
+                loadTourRoom(currentRoomIndex - 1);
+            }
+        }
+
+        function nextNode() {
+            if (currentRoomIndex < currentTour.nodes.length - 1) {
+                loadTourRoom(currentRoomIndex + 1);
+            }
+        }
+
+        function exitViewer() {
+            // Hide viewer section
+            document.getElementById('viewer-section').classList.remove('active');
+            
+            // Show editor section
+            document.getElementById('editor-section').classList.add('active');
+        }
+
+        /**
+         * Back to upload
+         */
+        function backToUpload() {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show upload section
+            document.getElementById('upload-section').classList.add('active');
+        }
+
+        /**
+         * Save tour
+         */
+        function saveTour() {
+            showNotification('Save tour functionality not implemented yet', 'info');
+        }
+
+        /**
+         * Show metadata template
+         */
+        function showMetaTemplate() {
+            const modal = document.getElementById('meta-template-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        /**
+         * Close modal
+         */
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        /**
+         * Download template
+         */
+        function downloadTemplate() {
+            const template = {
+                "nodes": [
+                    {
+                        "id": "entrance",
+                        "image": "entrance.jpg",
+                        "label": "Main Entrance",
+                        "next": "living_room"
+                    },
+                    {
+                        "id": "living_room",
+                        "image": "living.jpg", 
+                        "label": "Living Room",
+                        "next": "kitchen"
+                    },
+                    {
+                        "id": "kitchen",
+                        "image": "kitchen.jpg",
+                        "label": "Kitchen", 
+                        "next": null
+                    }
+                ]
+            };
+            
+            const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tour-metadata-template.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeModal('meta-template-modal');
+        }
+
+        /**
+         * Utility functions
+         */
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; cursor: pointer; margin-left: auto;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#f8d7da' : type === 'success' ? '#d4edda' : '#d1ecf1'};
+                color: ${type === 'error' ? '#721c24' : type === 'success' ? '#155724' : '#0c5460'};
+                border: 1px solid ${type === 'error' ? '#f5c6cb' : type === 'success' ? '#c3e6cb' : '#bee5eb'};
+                border-radius: 6px;
+                padding: 12px 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                z-index: 10000;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function showLoading(text = 'Loading...') {
+            const overlay = document.getElementById('loading-overlay');
+            const textEl = document.getElementById('loading-text');
+            if (overlay && textEl) {
+                textEl.textContent = text;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Only handle shortcuts in viewer mode
+            if (document.getElementById('viewer-section').classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    previousNode();
+                    e.preventDefault();
+                } else if (e.key === 'ArrowRight') {
+                    nextNode();
+                    e.preventDefault();
+                } else if (e.key === 'Escape') {
+                    exitViewer();
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Add missing global functions that are called from HTML
+        window.generateTour = generateTour;
+        window.previewTour = previewTour;
+        window.saveTour = saveTour;
+        window.backToUpload = backToUpload;
+        window.exitViewer = exitViewer;
+        window.previousNode = previousNode;
+        window.nextNode = nextNode;
+        window.showMetaTemplate = showMetaTemplate;
+        window.closeModal = closeModal;
+        window.downloadTemplate = downloadTemplate;
+        window.removePanorama = removePanorama;
+        window.removeLayer = removeLayer;
+        window.addNode = function() { showNotification('Add node functionality coming soon', 'info'); };
+        window.toggleFullscreen = function() { 
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        };
+        window.shareTour = function() { showNotification('Share functionality coming soon', 'info'); };
+        window.toggleUI = function() { showNotification('UI toggle functionality coming soon', 'info'); };
+    </script>
+</body>
+</html>

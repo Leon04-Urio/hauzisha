@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOFT³ Virtual Tour - Minimal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #viewer-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <div id="loading">
+            <div class="spinner"></div>
+            <h2>Loading Virtual Tour</h2>
+            <p>Preparing your experience...</p>
+        </div>
+    </div>
+
+    <!-- Marzipano -->
+    <script src="lib/marzipano.min.js"></script>
+    
+    <script>
+        console.log('🚀 Starting minimal viewer...');
+        
+        // Wait for Marzipano to load
+        function waitForMarzipano() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const check = () => {
+                    if (typeof Marzipano !== 'undefined') {
+                        console.log('✅ Marzipano loaded');
+                        resolve();
+                    } else if (attempts > 50) {
+                        reject(new Error('Marzipano failed to load'));
+                    } else {
+                        attempts++;
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        }
+        
+        async function initViewer() {
+            try {
+                await waitForMarzipano();
+                
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                
+                // Create Marzipano viewer
+                const container = document.getElementById('viewer-container');
+                
+                const viewer = new Marzipano.Viewer(container, {
+                    controls: {
+                        mouseViewMode: 'drag'
+                    }
+                });
+                
+                console.log('✅ Marzipano viewer created');
+                
+                // Load the image
+                const imageUrl = './test-panorama.jpg';
+                console.log('🖼️ Loading image:', imageUrl);
+                
+                // Create geometry and view
+                const geometry = new Marzipano.EquirectGeometry([{ width: 4096 }]);
+                const limiter = Marzipano.RectilinearView.limit.traditional(1024, 100*Math.PI/180);
+                const view = new Marzipano.RectilinearView({ fov: Math.PI/2 }, limiter);
+                
+                // Create source and scene
+                const source = Marzipano.ImageUrlSource.fromString(imageUrl);
+                const scene = viewer.createScene({
+                    source: source,
+                    geometry: geometry,
+                    view: view,
+                    pinFirstLevel: true
+                });
+                
+                console.log('✅ Scene created');
+                
+                // Switch to scene
+                scene.switchTo();
+                
+                console.log('✅ Scene switched - Tour should be visible!');
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize viewer:', error);
+                document.getElementById('loading').innerHTML = `
+                    <h2>Error</h2>
+                    <p>Failed to load tour: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initViewer);
+    </script>
+</body>
+</html>
